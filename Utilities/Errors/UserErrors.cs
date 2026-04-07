@@ -2,7 +2,17 @@
 
 namespace Utilities.Errors;
 
-public class UserErrors
+public static class UserErrors
 {
-    public static Error EmailAlreadyExists => new Error("EmailAlreadyExists", "The provided email is already in use.");
+    public static readonly Error EmailAlreadyExists =
+        new("User.EmailAlreadyExists", "A user with that email already exists.");
+
+    public static readonly Error UserNotFound =
+        new("User.UserNotFound", "User not found.");
+
+    public static readonly Error UserGroupAssignmentAlreadyExists =
+        new("User.UserGroupAssignmentAlreadyExists", "The user is already assigned to that group for that school year.");
+
+    public static readonly Error UserSchoolAssignmentAlreadyExists =
+        new("User.UserSchoolAssignmentAlreadyExists", "The user is already assigned to that school for that school year.");
 }

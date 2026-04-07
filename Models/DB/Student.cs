@@ -3,7 +3,7 @@
 public enum gender
 {
     M = 1, // Male (Masculino)
-    H = 2  // Female (Hombre is incorrect in DB, should be F but keeping H for consistency)
+    F = 2  // Female (Femenino)
 }
 
 public class Student

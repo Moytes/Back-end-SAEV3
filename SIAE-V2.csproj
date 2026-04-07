@@ -33,10 +33,6 @@
 	  <None Include="Models\DB\Disability.cs" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Models\Request\" />
-	</ItemGroup>
-
 	<ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 
 </Project>

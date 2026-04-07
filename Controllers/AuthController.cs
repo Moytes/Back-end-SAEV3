@@ -118,7 +118,7 @@ public class AuthController(
         var user = await _userRepositorie.GetUserById(userId);
 
         if (user == null)
-            UnauthorizedResponse("User not found");
+            return UnauthorizedResponse("User not found");
 
         return StandardSuccess(200, "User information retrieved successfully", new
         {
