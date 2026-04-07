@@ -1,0 +1,96 @@
+# ====================================================================
+# Docker ignore file for SIAE-V2
+# ====================================================================
+
+# Archivos de Git
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# Directorios de build y binarios
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+[Ee]xt/
+[Ll]og/
+[Ll]ogs/
+
+# Archivos de Visual Studio
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.sln.iml
+.localhistory/
+.vshistory/
+
+# Archivos temporales y de prueba
+*.tmp
+*.log
+*.cache
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+# Archivos de publicación
+*.Publish.xml
+*.pubxml
+*.publishproj
+PublishScripts/
+
+# NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+# Archivos de configuración sensibles
+appsettings.json
+appsettings.Development.json
+appsettings.*.json
+
+# Documentación y archivos varios
+README.md
+Docs/
+*.md
+LICENSE
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Archivos de Node (si existen)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# CI/CD
+.github/
+azure-pipelines.yml
+.gitlab-ci.yml
+
+# IDE
+*.swp
+*.swo
+*~
+.idea/
+
+# Coverage y profiler
+coverage/
+*.coverage
+*.coveragexml
+BenchmarkDotNet.Artifacts/
