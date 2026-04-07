@@ -1,0 +1,779 @@
+-- ============================================================================
+-- PLATAFORMA DE EDUCACIÓN ESPECIAL — USAER
+-- Base de datos PostgreSQL
+-- Enfoque: Comunicación, Comprensión, Detección TEA Nivel 1
+-- Grados: 1° a 6° de Primaria
+-- ============================================================================
+-- Autor: Centro ECG
+-- Fecha: 2026-04-06
+-- ============================================================================
+
+BEGIN;
+
+-- ============================================================================
+-- 0. EXTENSIONES
+-- ============================================================================
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- ============================================================================
+-- 1. CATÁLOGOS BASE
+-- ============================================================================
+
+CREATE TABLE ciclos_escolares (
+    id              SERIAL PRIMARY KEY,
+    nombre          VARCHAR(20) NOT NULL UNIQUE,   -- '2025-2026'
+    fecha_inicio    DATE NOT NULL,
+    fecha_fin       DATE NOT NULL,
+    activo          BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE zonas_escolares (
+    id              SERIAL PRIMARY KEY,
+    numero          VARCHAR(10) NOT NULL,          -- '03'
+    cct             VARCHAR(20) NOT NULL UNIQUE,   -- '22FUA0005N'
+    nombre          VARCHAR(200),
+    descripcion     TEXT
+);
+
+CREATE TABLE escuelas (
+    id              SERIAL PRIMARY KEY,
+    zona_id         INT NOT NULL REFERENCES zonas_escolares(id),
+    nombre          VARCHAR(200) NOT NULL,         -- 'REPUBLICA FRANCESA'
+    cct             VARCHAR(20) UNIQUE,
+    turno           VARCHAR(20) DEFAULT 'MATUTINO'
+                    CHECK (turno IN ('MATUTINO','VESPERTINO','COMPLETO')),
+    direccion       TEXT,
+    activa          BOOLEAN DEFAULT TRUE,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE grados (
+    id              SERIAL PRIMARY KEY,
+    numero          SMALLINT NOT NULL CHECK (numero BETWEEN 1 AND 6),
+    nombre          VARCHAR(20) NOT NULL,
+    UNIQUE(numero)
+);
+INSERT INTO grados (numero, nombre) VALUES
+(1,'Primero'),(2,'Segundo'),(3,'Tercero'),
+(4,'Cuarto'),(5,'Quinto'),(6,'Sexto');
+
+CREATE TABLE grupos (
+    id              SERIAL PRIMARY KEY,
+    escuela_id      INT NOT NULL REFERENCES escuelas(id),
+    grado_id        INT NOT NULL REFERENCES grados(id),
+    seccion         CHAR(1) NOT NULL DEFAULT 'A',
+    ciclo_id        INT NOT NULL REFERENCES ciclos_escolares(id),
+    UNIQUE(escuela_id, grado_id, seccion, ciclo_id)
+);
+
+-- ============================================================================
+-- 2. USUARIOS
+-- ============================================================================
+
+CREATE TABLE roles (
+    id              SERIAL PRIMARY KEY,
+    clave           VARCHAR(30) NOT NULL UNIQUE,
+    nombre          VARCHAR(100) NOT NULL,
+    descripcion     TEXT
+);
+INSERT INTO roles (clave, nombre) VALUES
+('ADMIN',           'Administrador del sistema'),
+('SUPERVISOR',      'Supervisor de zona'),
+('DIRECTOR_USAER',  'Director de USAER'),
+('ESPECIALISTA_COM','Especialista en Comunicación'),
+('ESPECIALISTA_PSI','Especialista en Psicología'),
+('ESPECIALISTA_APR','Especialista en Aprendizaje'),
+('TRABAJO_SOCIAL',  'Trabajo Social'),
+('DOCENTE',         'Docente de grupo regular');
+
+CREATE TABLE usuarios (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email           VARCHAR(200) NOT NULL UNIQUE,
+    password_hash   TEXT NOT NULL,
+    nombre          VARCHAR(100) NOT NULL,
+    apellido_pat    VARCHAR(100) NOT NULL,
+    apellido_mat    VARCHAR(100),
+    rol_id          INT NOT NULL REFERENCES roles(id),
+    zona_id         INT REFERENCES zonas_escolares(id),
+    telefono        VARCHAR(20),
+    activo          BOOLEAN DEFAULT TRUE,
+    avatar_url      TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Un profesor atiende varios grupos
+CREATE TABLE usuario_grupos (
+    id              SERIAL PRIMARY KEY,
+    usuario_id      UUID NOT NULL REFERENCES usuarios(id),
+    grupo_id        INT NOT NULL REFERENCES grupos(id),
+    ciclo_id        INT NOT NULL REFERENCES ciclos_escolares(id),
+    es_titular      BOOLEAN DEFAULT FALSE,
+    UNIQUE(usuario_id, grupo_id, ciclo_id)
+);
+
+-- Un especialista atiende varias escuelas
+CREATE TABLE usuario_escuelas (
+    id              SERIAL PRIMARY KEY,
+    usuario_id      UUID NOT NULL REFERENCES usuarios(id),
+    escuela_id      INT NOT NULL REFERENCES escuelas(id),
+    ciclo_id        INT NOT NULL REFERENCES ciclos_escolares(id),
+    UNIQUE(usuario_id, escuela_id, ciclo_id)
+);
+
+-- ============================================================================
+-- 3. ALUMNOS
+-- ============================================================================
+
+CREATE TABLE alumnos (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    nombre          VARCHAR(100) NOT NULL,
+    apellido_pat    VARCHAR(100) NOT NULL,
+    apellido_mat    VARCHAR(100),
+    sexo            CHAR(1) CHECK (sexo IN ('M','H')),
+    fecha_nacimiento DATE NOT NULL,
+    curp            VARCHAR(18) UNIQUE,
+    foto_url        TEXT,
+    activo          BOOLEAN DEFAULT TRUE,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE tutores (
+    id              SERIAL PRIMARY KEY,
+    alumno_id       UUID NOT NULL REFERENCES alumnos(id),
+    nombre_completo VARCHAR(200) NOT NULL,
+    parentesco      VARCHAR(50),
+    telefono        VARCHAR(20),
+    email           VARCHAR(200),
+    direccion       TEXT
+);
+
+CREATE TABLE inscripciones (
+    id              SERIAL PRIMARY KEY,
+    alumno_id       UUID NOT NULL REFERENCES alumnos(id),
+    grupo_id        INT NOT NULL REFERENCES grupos(id),
+    ciclo_id        INT NOT NULL REFERENCES ciclos_escolares(id),
+    fecha_ingreso   DATE DEFAULT CURRENT_DATE,
+    es_nuevo        BOOLEAN DEFAULT FALSE,
+    es_seguimiento  BOOLEAN DEFAULT FALSE,
+    situacion_final VARCHAR(20)
+                    CHECK (situacion_final IN ('ALTA','BAJA','SEGUIMIENTO')),
+    notas           TEXT,
+    UNIQUE(alumno_id, ciclo_id)
+);
+
+-- ============================================================================
+-- 4. CATÁLOGO DE DISCAPACIDADES Y BAP
+-- ============================================================================
+
+CREATE TABLE cat_discapacidad (
+    id              SERIAL PRIMARY KEY,
+    clave           VARCHAR(30) NOT NULL UNIQUE,
+    nombre          VARCHAR(100) NOT NULL,
+    categoria       VARCHAR(30) NOT NULL
+                    CHECK (categoria IN ('DISCAPACIDAD','BAP','AS')),
+    descripcion     TEXT
+);
+INSERT INTO cat_discapacidad (clave, nombre, categoria) VALUES
+('INTELECTUAL',   'Discapacidad Intelectual',       'DISCAPACIDAD'),
+('MOTRIZ',        'Discapacidad Motriz',            'DISCAPACIDAD'),
+('SORDERA',       'Sordera',                        'DISCAPACIDAD'),
+('HIPOACUSIA',    'Hipoacusia',                     'DISCAPACIDAD'),
+('CEGUERA',       'Ceguera',                        'DISCAPACIDAD'),
+('BAJA_VISION',   'Baja Visión',                    'DISCAPACIDAD'),
+('MULTIPLE',      'Discapacidad Múltiple',          'DISCAPACIDAD'),
+('SORDOCEGUERA',  'Sordoceguera',                   'DISCAPACIDAD'),
+('TEA',           'Trastorno del Espectro Autista', 'DISCAPACIDAD'),
+('TDAH',          'TDAH',                           'BAP'),
+('APRENDIZAJE',   'Barreras de Aprendizaje',        'BAP'),
+('COMUNICACION',  'Barreras de Comunicación',       'BAP'),
+('CONDUCTA',      'Barreras de Conducta',           'BAP'),
+('AS',            'Aptitudes Sobresalientes',       'AS');
+
+CREATE TABLE alumno_discapacidad (
+    id              SERIAL PRIMARY KEY,
+    alumno_id       UUID NOT NULL REFERENCES alumnos(id),
+    discapacidad_id INT NOT NULL REFERENCES cat_discapacidad(id),
+    ciclo_id        INT NOT NULL REFERENCES ciclos_escolares(id),
+    diagnostico_externo BOOLEAN DEFAULT FALSE,
+    documento_url   TEXT,
+    notas           TEXT,
+    UNIQUE(alumno_id, discapacidad_id, ciclo_id)
+);
+
+-- ============================================================================
+-- 5. ÁREAS DE ATENCIÓN
+-- ============================================================================
+
+CREATE TABLE cat_area_atencion (
+    id              SERIAL PRIMARY KEY,
+    clave           VARCHAR(30) NOT NULL UNIQUE,
+    nombre          VARCHAR(100) NOT NULL
+);
+INSERT INTO cat_area_atencion (clave, nombre) VALUES
+('APRENDIZAJE',    'Aprendizaje'),
+('PSICOLOGIA',     'Psicología'),
+('COMUNICACION',   'Comunicación'),
+('TRABAJO_SOCIAL', 'Trabajo Social');
+
+CREATE TABLE alumno_areas_atencion (
+    id              SERIAL PRIMARY KEY,
+    alumno_id       UUID NOT NULL REFERENCES alumnos(id),
+    area_id         INT NOT NULL REFERENCES cat_area_atencion(id),
+    ciclo_id        INT NOT NULL REFERENCES ciclos_escolares(id),
+    requiere        BOOLEAN DEFAULT TRUE,
+    notas           TEXT,
+    UNIQUE(alumno_id, area_id, ciclo_id)
+);
+
+-- ============================================================================
+-- 6. MODALIDAD DE ATENCIÓN
+-- ============================================================================
+
+CREATE TABLE modalidad_atencion (
+    id              SERIAL PRIMARY KEY,
+    alumno_id       UUID NOT NULL REFERENCES alumnos(id),
+    ciclo_id        INT NOT NULL REFERENCES ciclos_escolares(id),
+    fase            VARCHAR(10) NOT NULL CHECK (fase IN ('INICIAL','FINAL')),
+    tipo            VARCHAR(20) NOT NULL CHECK (tipo IN ('PLAN_INDIVIDUAL','PLAN_ESCUELA')),
+    UNIQUE(alumno_id, ciclo_id, fase, tipo)
+);
+
+-- ============================================================================
+-- 7. HOJA DE CANALIZACIÓN
+-- ============================================================================
+
+CREATE TABLE canalizaciones (
+    id              SERIAL PRIMARY KEY,
+    alumno_id       UUID NOT NULL REFERENCES alumnos(id),
+    ciclo_id        INT NOT NULL REFERENCES ciclos_escolares(id),
+    fecha           DATE NOT NULL DEFAULT CURRENT_DATE,
+    area_canaliza   INT REFERENCES cat_area_atencion(id),
+    motivo          TEXT NOT NULL,
+    acciones_aula   TEXT,
+    solicitante_id  UUID REFERENCES usuarios(id),
+    receptor_id     UUID REFERENCES usuarios(id),
+    fecha_recibido  DATE,
+    estado          VARCHAR(20) DEFAULT 'PENDIENTE'
+                    CHECK (estado IN ('PENDIENTE','RECIBIDA','EN_PROCESO','CERRADA')),
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================================
+-- 8. EVALUACIÓN PSICOPEDAGÓGICA
+-- ============================================================================
+
+CREATE TABLE evaluaciones_psicopedagogicas (
+    id              SERIAL PRIMARY KEY,
+    alumno_id       UUID NOT NULL REFERENCES alumnos(id),
+    ciclo_id        INT NOT NULL REFERENCES ciclos_escolares(id),
+    fecha_elaboracion DATE NOT NULL DEFAULT CURRENT_DATE,
+    -- II. Motivo
+    motivo_evaluacion           TEXT,
+    -- III. Conducta durante evaluación
+    conducta_evaluacion         TEXT,
+    -- IV. Antecedentes del desarrollo
+    antecedentes_embarazo       TEXT,
+    antecedentes_heredo         TEXT,
+    desarrollo_motor            TEXT,
+    desarrollo_lenguaje         TEXT,
+    historia_medica             TEXT,
+    historia_escolar            TEXT,
+    situacion_familiar          TEXT,
+    -- V. Situación actual
+    descripcion_alumno          TEXT,
+    contexto_familiar           TEXT,
+    contexto_escolar            TEXT,
+    contexto_social             TEXT,
+    desarrollo_fisico           TEXT,
+    desarrollo_cognitivo        TEXT,
+    desarrollo_socioafectivo    TEXT,
+    evaluacion_aprendizajes     TEXT,
+    creatividad                 TEXT,
+    -- VI. Interpretación de resultados
+    interpretacion_resultados   TEXT,
+    -- VII. Conclusiones
+    conclusiones                TEXT,
+    -- Meta
+    estado          VARCHAR(20) DEFAULT 'BORRADOR'
+                    CHECK (estado IN ('BORRADOR','EN_REVISION','FIRMADA','ENTREGADA')),
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE eval_psico_bap (
+    id              SERIAL PRIMARY KEY,
+    eval_psico_id   INT NOT NULL REFERENCES evaluaciones_psicopedagogicas(id) ON DELETE CASCADE,
+    tipo_bap        VARCHAR(100),
+    contexto        VARCHAR(100),
+    indicador_inclusion TEXT,
+    descripcion     TEXT
+);
+
+CREATE TABLE eval_psico_colaboradores (
+    id              SERIAL PRIMARY KEY,
+    eval_psico_id   INT NOT NULL REFERENCES evaluaciones_psicopedagogicas(id) ON DELETE CASCADE,
+    usuario_id      UUID REFERENCES usuarios(id),
+    nombre_externo  VARCHAR(200),
+    rol_colaborador VARCHAR(100),
+    firma_digital   BOOLEAN DEFAULT FALSE,
+    fecha_firma     TIMESTAMPTZ
+);
+
+-- ============================================================================
+-- 9. INSTRUMENTO CIE Z03 — EVALUACIÓN DE COMUNICACIÓN
+-- ============================================================================
+
+CREATE TABLE cie_dimensiones (
+    id              SERIAL PRIMARY KEY,
+    clave           VARCHAR(30) NOT NULL UNIQUE,
+    nombre          VARCHAR(100) NOT NULL,
+    color_hex       VARCHAR(7),
+    descripcion     TEXT,
+    orden           SMALLINT NOT NULL
+);
+INSERT INTO cie_dimensiones (clave, nombre, color_hex, orden) VALUES
+('FONOLOGIA',       'Fonología',              '#FF6B6B', 1),
+('SEMANTICA',       'Semántica (Contenido)',   '#4ECDC4', 2),
+('PRAGMATICA',      'Pragmática (Uso)',        '#45B7D1', 3),
+('MORFOSINTAXIS',   'Morfosintaxis (Forma)',   '#96CEB4', 4),
+('DISCURSO_ORAL',   'Discursos Orales',        '#FFEAA7', 5),
+('JUEGO',           'Juego',                   '#DDA0DD', 6);
+
+CREATE TABLE cie_indicadores (
+    id              SERIAL PRIMARY KEY,
+    dimension_id    INT NOT NULL REFERENCES cie_dimensiones(id),
+    codigo          VARCHAR(30),
+    nombre          VARCHAR(200) NOT NULL,
+    descripcion     TEXT,
+    orden           SMALLINT NOT NULL
+);
+
+CREATE TABLE cie_subindicadores (
+    id              SERIAL PRIMARY KEY,
+    indicador_id    INT NOT NULL REFERENCES cie_indicadores(id),
+    codigo          VARCHAR(30),
+    nombre          VARCHAR(300) NOT NULL,
+    descripcion     TEXT,
+    orden           SMALLINT NOT NULL
+);
+
+-- Seed: Fonología indicadores
+INSERT INTO cie_indicadores (dimension_id, codigo, nombre, orden) VALUES
+(1, 'FON_VOC',  'Realiza vocalizaciones', 1),
+(1, 'FON_PAL',  'Produce palabras con:', 2),
+(1, 'FON_PTO',  'Punto de articulación', 3),
+(1, 'FON_SIT',  'Situación fonológica', 4),
+(1, 'FON_APA',  'Aparato fonoarticulador', 5);
+
+-- Seed: Fonología subindicadores
+INSERT INTO cie_subindicadores (indicador_id, codigo, nombre, orden) VALUES
+(1, 'FON_VOC_A', 'Con intención comunicativa', 1),
+(2, 'FON_PAL_A', 'Una sílaba', 1),
+(2, 'FON_PAL_B', 'Dos sílabas', 2),
+(2, 'FON_PAL_C', 'Heterosilábicas', 3),
+(2, 'FON_PAL_D', 'Homosilábicas: /r/: tr, br, kr, gr; /l/: bl, pl, kl, fl', 4),
+(2, 'FON_PAL_E', 'Combinaciones: /mbr/, /str/', 5),
+(2, 'FON_PAL_F', 'Diptongos', 6),
+(3, 'FON_PTO_A', 'Vocales (SI al producir 3/5 o más)', 1),
+(3, 'FON_PTO_B', 'Velares /k/, /g/, /j/', 2),
+(3, 'FON_PTO_C', 'Bilabiales /p/, /b/, /m/', 3),
+(3, 'FON_PTO_D', 'Alveolares /s/, /l/, /r/, /n/', 4),
+(3, 'FON_PTO_E', 'Palatales /ch/, /ll/, /ñ/', 5),
+(3, 'FON_PTO_F', 'Dentales /d/, /t/', 6),
+(3, 'FON_PTO_G', 'Labiodentales /f/', 7),
+(3, 'FON_PTO_H', 'Laterales /l/', 8),
+(3, 'FON_PTO_I', 'Vibrantes /r/, /ṝ/', 9),
+(4, 'FON_SIT_A', 'Habla sin omisiones', 1),
+(4, 'FON_SIT_B', 'Habla sin adiciones', 2),
+(4, 'FON_SIT_C', 'Habla sin sustituciones', 3),
+(4, 'FON_SIT_D', 'Habla sin distorsiones', 4),
+(4, 'FON_SIT_E', 'Habla sin alteraciones globales', 5),
+(4, 'FON_SIT_F', 'Habla sin reducción silábica', 6),
+(5, 'FON_APA_LENGUA',    'Lengua', 1),
+(5, 'FON_APA_FRENILLO',  'Frenillo lingual', 2),
+(5, 'FON_APA_LABIOS',    'Labios', 3),
+(5, 'FON_APA_MANDIBULA', 'Mandíbula', 4),
+(5, 'FON_APA_MEJILLAS',  'Mejillas', 5),
+(5, 'FON_APA_DIENTES',   'Dientes', 6),
+(5, 'FON_APA_PALADAR',   'Paladar duro y velo', 7);
+
+-- ============================================================================
+-- 10. EVALUACIONES CIE — RESPUESTAS
+-- ============================================================================
+
+CREATE TABLE cie_evaluaciones (
+    id              SERIAL PRIMARY KEY,
+    alumno_id       UUID NOT NULL REFERENCES alumnos(id),
+    evaluador_id    UUID NOT NULL REFERENCES usuarios(id),
+    ciclo_id        INT NOT NULL REFERENCES ciclos_escolares(id),
+    dimension_id    INT NOT NULL REFERENCES cie_dimensiones(id),
+    fecha           DATE NOT NULL DEFAULT CURRENT_DATE,
+    observaciones   TEXT,
+    estado          VARCHAR(20) DEFAULT 'EN_PROCESO'
+                    CHECK (estado IN ('EN_PROCESO','COMPLETADA','REVISADA')),
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE cie_respuestas (
+    id              SERIAL PRIMARY KEY,
+    evaluacion_id   INT NOT NULL REFERENCES cie_evaluaciones(id) ON DELETE CASCADE,
+    subindicador_id INT NOT NULL REFERENCES cie_subindicadores(id),
+    logrado         BOOLEAN,
+    nivel_ayuda     SMALLINT CHECK (nivel_ayuda BETWEEN 0 AND 4),
+        -- 0=Independiente, 1=Verbal, 2=Visual, 3=Física, 4=Total
+    respuesta_tipo  VARCHAR(20) CHECK (respuesta_tipo IN ('COMUNICATIVO','LINGUISTICO')),
+    observacion     TEXT,
+    evidencia_url   TEXT,
+    UNIQUE(evaluacion_id, subindicador_id)
+);
+
+CREATE TABLE cie_resp_fonoarticulador (
+    id              SERIAL PRIMARY KEY,
+    evaluacion_id   INT NOT NULL REFERENCES cie_evaluaciones(id) ON DELETE CASCADE,
+    subindicador_id INT NOT NULL REFERENCES cie_subindicadores(id),
+    funcional       BOOLEAN,
+    observacion_forma TEXT,
+    UNIQUE(evaluacion_id, subindicador_id)
+);
+
+-- ============================================================================
+-- 11. DETECCIÓN TEA NIVEL 1
+-- ============================================================================
+
+CREATE TABLE cat_tea_indicadores (
+    id              SERIAL PRIMARY KEY,
+    dominio         VARCHAR(50) NOT NULL,
+    codigo          VARCHAR(20) NOT NULL UNIQUE,
+    descripcion     TEXT NOT NULL,
+    rango_edad_min  SMALLINT,   -- meses
+    rango_edad_max  SMALLINT,
+    orden           SMALLINT NOT NULL
+);
+
+INSERT INTO cat_tea_indicadores (dominio, codigo, descripcion, rango_edad_min, rango_edad_max, orden) VALUES
+('COMUNICACION_SOCIAL', 'TEA_CS_01', 'Dificultad para iniciar o mantener conversaciones',               72, 144, 1),
+('COMUNICACION_SOCIAL', 'TEA_CS_02', 'Respuestas inusuales en interacciones sociales',                  72, 144, 2),
+('COMUNICACION_SOCIAL', 'TEA_CS_03', 'Contacto visual limitado o atípico',                              72, 144, 3),
+('COMUNICACION_SOCIAL', 'TEA_CS_04', 'Dificultad para comprender lenguaje no literal (ironía, chistes)',72, 144, 4),
+('COMUNICACION_SOCIAL', 'TEA_CS_05', 'Dificultad para hacer amigos o mantener relaciones',              72, 144, 5),
+('COMUNICACION_SOCIAL', 'TEA_CS_06', 'Expresión emocional limitada o inadecuada al contexto',           72, 144, 6),
+('COMUNICACION_SOCIAL', 'TEA_CS_07', 'Dificultad para tomar turnos en la conversación',                 72, 144, 7),
+('COMUNICACION_SOCIAL', 'TEA_CS_08', 'Prosodia inusual (tono monótono, volumen inadecuado)',            72, 144, 8),
+('CONDUCTA_REPETITIVA', 'TEA_CR_01', 'Intereses intensos y restringidos',                               72, 144, 1),
+('CONDUCTA_REPETITIVA', 'TEA_CR_02', 'Inflexibilidad ante cambios de rutina',                           72, 144, 2),
+('CONDUCTA_REPETITIVA', 'TEA_CR_03', 'Movimientos repetitivos o estereotipados',                        72, 144, 3),
+('CONDUCTA_REPETITIVA', 'TEA_CR_04', 'Hiper o hipo reactividad sensorial',                              72, 144, 4),
+('CONDUCTA_REPETITIVA', 'TEA_CR_05', 'Adherencia excesiva a reglas o patrones',                         72, 144, 5);
+
+CREATE TABLE tea_screenings (
+    id              SERIAL PRIMARY KEY,
+    alumno_id       UUID NOT NULL REFERENCES alumnos(id),
+    evaluador_id    UUID NOT NULL REFERENCES usuarios(id),
+    ciclo_id        INT NOT NULL REFERENCES ciclos_escolares(id),
+    fecha           DATE NOT NULL DEFAULT CURRENT_DATE,
+    contexto_obs    VARCHAR(50),
+    observaciones_generales TEXT,
+    puntaje_total   SMALLINT,
+    nivel_alerta    VARCHAR(20)
+                    CHECK (nivel_alerta IN ('SIN_ALERTA','LEVE','MODERADO','SIGNIFICATIVO')),
+    requiere_canalizacion BOOLEAN DEFAULT FALSE,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE tea_respuestas (
+    id              SERIAL PRIMARY KEY,
+    screening_id    INT NOT NULL REFERENCES tea_screenings(id) ON DELETE CASCADE,
+    indicador_id    INT NOT NULL REFERENCES cat_tea_indicadores(id),
+    frecuencia      SMALLINT CHECK (frecuencia BETWEEN 0 AND 3),
+    intensidad      SMALLINT CHECK (intensidad BETWEEN 0 AND 3),
+    observacion     TEXT,
+    UNIQUE(screening_id, indicador_id)
+);
+
+-- ============================================================================
+-- 12. MATERIAL DIDÁCTICO
+-- ============================================================================
+
+CREATE TABLE cat_tipo_material (
+    id              SERIAL PRIMARY KEY,
+    clave           VARCHAR(30) NOT NULL UNIQUE,
+    nombre          VARCHAR(100) NOT NULL,
+    descripcion     TEXT
+);
+INSERT INTO cat_tipo_material (clave, nombre) VALUES
+('DIALOGO_ANIMADO', 'Diálogo animado interactivo'),
+('ACTIVIDAD',       'Actividad didáctica'),
+('JUEGO_DIGITAL',   'Juego digital educativo'),
+('IMAGEN',          'Material visual / imagen'),
+('AUDIO',           'Material de audio'),
+('VIDEO',           'Video educativo'),
+('DOCUMENTO',       'Documento / ficha de trabajo');
+
+CREATE TABLE materiales (
+    id              SERIAL PRIMARY KEY,
+    creador_id      UUID NOT NULL REFERENCES usuarios(id),
+    tipo_id         INT NOT NULL REFERENCES cat_tipo_material(id),
+    titulo          VARCHAR(200) NOT NULL,
+    descripcion     TEXT,
+    dimension_id    INT REFERENCES cie_dimensiones(id),
+    grado_min       SMALLINT CHECK (grado_min BETWEEN 1 AND 6),
+    grado_max       SMALLINT CHECK (grado_max BETWEEN 1 AND 6),
+    contenido_json  JSONB,
+    archivo_url     TEXT,
+    thumbnail_url   TEXT,
+    evaluacion_auto BOOLEAN DEFAULT FALSE,
+    criterios_json  JSONB,
+    publicado       BOOLEAN DEFAULT FALSE,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE material_tags (
+    id              SERIAL PRIMARY KEY,
+    material_id     INT NOT NULL REFERENCES materiales(id) ON DELETE CASCADE,
+    tag             VARCHAR(50) NOT NULL
+);
+CREATE INDEX idx_material_tags ON material_tags(tag);
+
+-- ============================================================================
+-- 13. ASIGNACIONES Y EVALUACIONES
+-- ============================================================================
+
+CREATE TABLE asignaciones (
+    id              SERIAL PRIMARY KEY,
+    material_id     INT NOT NULL REFERENCES materiales(id),
+    asignado_por    UUID NOT NULL REFERENCES usuarios(id),
+    ciclo_id        INT NOT NULL REFERENCES ciclos_escolares(id),
+    fecha_asignacion TIMESTAMPTZ DEFAULT NOW(),
+    fecha_limite    DATE,
+    instrucciones   TEXT,
+    activa          BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE asignacion_alumnos (
+    id              SERIAL PRIMARY KEY,
+    asignacion_id   INT NOT NULL REFERENCES asignaciones(id) ON DELETE CASCADE,
+    alumno_id       UUID NOT NULL REFERENCES alumnos(id),
+    estado          VARCHAR(20) DEFAULT 'PENDIENTE'
+                    CHECK (estado IN ('PENDIENTE','EN_PROGRESO','COMPLETADO','EVALUADO')),
+    fecha_inicio    TIMESTAMPTZ,
+    fecha_completado TIMESTAMPTZ,
+    respuesta_json  JSONB,
+    evidencia_urls  TEXT[],
+    evaluacion_auto_json JSONB,
+    calificacion_manual  JSONB,
+    evaluado_por    UUID REFERENCES usuarios(id),
+    fecha_evaluacion TIMESTAMPTZ,
+    retroalimentacion TEXT,
+    UNIQUE(asignacion_id, alumno_id)
+);
+
+-- ============================================================================
+-- 14. DIÁLOGOS ANIMADOS
+-- ============================================================================
+
+CREATE TABLE dialogos (
+    id              SERIAL PRIMARY KEY,
+    material_id     INT NOT NULL REFERENCES materiales(id),
+    titulo          VARCHAR(200) NOT NULL,
+    descripcion     TEXT,
+    personaje_json  JSONB,
+    escenas_json    JSONB,
+    duracion_estimada_min SMALLINT,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE dialogo_progreso (
+    id              SERIAL PRIMARY KEY,
+    dialogo_id      INT NOT NULL REFERENCES dialogos(id),
+    alumno_id       UUID NOT NULL REFERENCES alumnos(id),
+    escena_actual   SMALLINT DEFAULT 0,
+    respuestas_json JSONB,
+    puntaje         NUMERIC(5,2),
+    completado      BOOLEAN DEFAULT FALSE,
+    fecha_inicio    TIMESTAMPTZ DEFAULT NOW(),
+    fecha_fin       TIMESTAMPTZ
+);
+
+-- ============================================================================
+-- 15. REPORTES GENERADOS
+-- ============================================================================
+
+CREATE TABLE reportes (
+    id              SERIAL PRIMARY KEY,
+    tipo            VARCHAR(50) NOT NULL,
+    alumno_id       UUID REFERENCES alumnos(id),
+    grupo_id        INT REFERENCES grupos(id),
+    ciclo_id        INT NOT NULL REFERENCES ciclos_escolares(id),
+    generado_por    UUID NOT NULL REFERENCES usuarios(id),
+    parametros_json JSONB,
+    contenido_json  JSONB,
+    archivo_url     TEXT,
+    formato         VARCHAR(10) DEFAULT 'PDF',
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================================
+-- 16. AUDITORÍA
+-- ============================================================================
+
+CREATE TABLE audit_log (
+    id              BIGSERIAL PRIMARY KEY,
+    usuario_id      UUID REFERENCES usuarios(id),
+    accion          VARCHAR(50) NOT NULL,
+    tabla_afectada  VARCHAR(100),
+    registro_id     TEXT,
+    datos_previos   JSONB,
+    datos_nuevos    JSONB,
+    ip_address      INET,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_audit_usuario ON audit_log(usuario_id, created_at DESC);
+CREATE INDEX idx_audit_tabla ON audit_log(tabla_afectada, created_at DESC);
+
+-- ============================================================================
+-- 17. NOTIFICACIONES
+-- ============================================================================
+
+CREATE TABLE notificaciones (
+    id              SERIAL PRIMARY KEY,
+    usuario_id      UUID NOT NULL REFERENCES usuarios(id),
+    titulo          VARCHAR(200) NOT NULL,
+    mensaje         TEXT,
+    tipo            VARCHAR(30) DEFAULT 'INFO',
+    leida           BOOLEAN DEFAULT FALSE,
+    url_destino     TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_notif_usuario ON notificaciones(usuario_id, leida, created_at DESC);
+
+-- ============================================================================
+-- 18. ÍNDICES
+-- ============================================================================
+
+CREATE INDEX idx_alumnos_nombre ON alumnos(apellido_pat, apellido_mat, nombre);
+CREATE INDEX idx_inscripciones_ciclo ON inscripciones(ciclo_id, grupo_id);
+CREATE INDEX idx_cie_eval_alumno ON cie_evaluaciones(alumno_id, ciclo_id);
+CREATE INDEX idx_tea_screen_alumno ON tea_screenings(alumno_id, ciclo_id);
+CREATE INDEX idx_asignacion_alumnos_estado ON asignacion_alumnos(alumno_id, estado);
+CREATE INDEX idx_canalizaciones_estado ON canalizaciones(estado, ciclo_id);
+CREATE INDEX idx_materiales_tipo ON materiales(tipo_id, publicado);
+CREATE INDEX idx_materiales_dimension ON materiales(dimension_id);
+
+-- ============================================================================
+-- 19. VISTAS
+-- ============================================================================
+
+-- Sábana de datos (replica la estructura del Excel)
+CREATE VIEW v_sabana_datos AS
+SELECT
+    i.id AS inscripcion_id,
+    e.nombre AS escuela,
+    a.apellido_pat || ' ' || COALESCE(a.apellido_mat,'') || ' ' || a.nombre AS nombre_alumno,
+    a.sexo,
+    EXTRACT(YEAR FROM AGE(a.fecha_nacimiento))::INT AS edad,
+    a.fecha_nacimiento,
+    g.numero || '° ' || gr.seccion AS grado_grupo,
+    i.es_seguimiento,
+    i.es_nuevo AS nuevo_ingreso,
+    EXISTS(SELECT 1 FROM alumno_discapacidad ad JOIN cat_discapacidad cd ON cd.id=ad.discapacidad_id
+           WHERE ad.alumno_id=a.id AND cd.clave='TEA' AND ad.ciclo_id=c.id) AS disc_tea,
+    EXISTS(SELECT 1 FROM alumno_discapacidad ad JOIN cat_discapacidad cd ON cd.id=ad.discapacidad_id
+           WHERE ad.alumno_id=a.id AND cd.clave='COMUNICACION' AND ad.ciclo_id=c.id) AS bap_comunicacion,
+    i.situacion_final,
+    c.nombre AS ciclo
+FROM inscripciones i
+JOIN alumnos a ON a.id = i.alumno_id
+JOIN grupos gr ON gr.id = i.grupo_id
+JOIN grados g ON g.id = gr.grado_id
+JOIN escuelas e ON e.id = gr.escuela_id
+JOIN ciclos_escolares c ON c.id = i.ciclo_id;
+
+-- Resumen CIE por alumno
+CREATE VIEW v_resumen_cie AS
+SELECT
+    ce.alumno_id,
+    a.apellido_pat || ' ' || a.nombre AS alumno,
+    d.nombre AS dimension,
+    ce.fecha,
+    COUNT(cr.id) AS total_items,
+    COUNT(cr.id) FILTER (WHERE cr.logrado = TRUE) AS logrados,
+    ROUND(100.0 * COUNT(cr.id) FILTER (WHERE cr.logrado = TRUE)
+          / NULLIF(COUNT(cr.id),0), 1) AS pct_logro,
+    ce.estado
+FROM cie_evaluaciones ce
+JOIN alumnos a ON a.id = ce.alumno_id
+JOIN cie_dimensiones d ON d.id = ce.dimension_id
+LEFT JOIN cie_respuestas cr ON cr.evaluacion_id = ce.id
+GROUP BY ce.alumno_id, a.apellido_pat, a.nombre, d.nombre, ce.fecha, ce.estado;
+
+-- Alertas TEA
+CREATE VIEW v_alertas_tea AS
+SELECT
+    ts.alumno_id,
+    a.apellido_pat || ' ' || a.nombre AS alumno,
+    ts.fecha,
+    ts.puntaje_total,
+    ts.nivel_alerta,
+    ts.requiere_canalizacion,
+    COUNT(tr.id) FILTER (WHERE tr.frecuencia >= 2) AS indicadores_frecuentes
+FROM tea_screenings ts
+JOIN alumnos a ON a.id = ts.alumno_id
+LEFT JOIN tea_respuestas tr ON tr.screening_id = ts.id
+GROUP BY ts.alumno_id, a.apellido_pat, a.nombre, ts.fecha,
+         ts.puntaje_total, ts.nivel_alerta, ts.requiere_canalizacion;
+
+-- ============================================================================
+-- 20. TRIGGERS Y FUNCIONES
+-- ============================================================================
+
+-- Puntaje TEA automático
+CREATE OR REPLACE FUNCTION fn_calcular_puntaje_tea()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE tea_screenings SET
+        puntaje_total = sub.total,
+        nivel_alerta = CASE
+            WHEN sub.total >= 30 THEN 'SIGNIFICATIVO'
+            WHEN sub.total >= 20 THEN 'MODERADO'
+            WHEN sub.total >= 10 THEN 'LEVE'
+            ELSE 'SIN_ALERTA'
+        END
+    FROM (
+        SELECT COALESCE(SUM(frecuencia + intensidad), 0) AS total
+        FROM tea_respuestas WHERE screening_id = NEW.screening_id
+    ) sub
+    WHERE id = NEW.screening_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_tea_puntaje
+AFTER INSERT OR UPDATE ON tea_respuestas
+FOR EACH ROW EXECUTE FUNCTION fn_calcular_puntaje_tea();
+
+-- Updated_at automático
+CREATE OR REPLACE FUNCTION fn_set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_usuarios_upd BEFORE UPDATE ON usuarios
+FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+CREATE TRIGGER trg_alumnos_upd BEFORE UPDATE ON alumnos
+FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+CREATE TRIGGER trg_materiales_upd BEFORE UPDATE ON materiales
+FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+CREATE TRIGGER trg_cie_eval_upd BEFORE UPDATE ON cie_evaluaciones
+FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+CREATE TRIGGER trg_eval_psico_upd BEFORE UPDATE ON evaluaciones_psicopedagogicas
+FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+
+COMMIT;

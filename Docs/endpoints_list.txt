@@ -1,0 +1,128 @@
+1. Autenticación y Usuarios (Auth & Users)
+POST /api/auth/login - Iniciar sesión y obtener token (JWT).
+
+GET /api/auth/me - Obtener el perfil del usuario autenticado.
+
+GET /api/roles - Listar los roles disponibles del sistema.
+
+GET /api/usuarios - Listar usuarios (con filtros por rol, zona o escuela).
+
+POST /api/usuarios - Crear un nuevo usuario.
+
+PUT /api/usuarios/{id} - Actualizar datos de un usuario.
+
+POST /api/usuarios/{id}/grupos - Asignar un docente a un grupo (tabla usuario_grupos).
+
+POST /api/usuarios/{id}/escuelas - Asignar un especialista a escuelas (usuario_escuelas).
+
+2. Catálogos Base (Administración Escolar)
+GET /api/ciclos-escolares - Listar ciclos escolares (y gestionar activos).
+
+GET /api/zonas-escolares - Listar zonas escolares.
+
+GET /api/escuelas - Listar escuelas (filtrables por zona).
+
+GET /api/grados - Listar grados (1° a 6°).
+
+GET /api/grupos - Listar grupos (filtrables por escuela y ciclo escolar).
+
+3. Alumnos y Tutores
+GET /api/alumnos - Listar alumnos (con búsqueda por nombre, CURP, escuela).
+
+POST /api/alumnos - Registrar un nuevo alumno.
+
+GET /api/alumnos/{id} - Obtener el expediente completo del alumno.
+
+PUT /api/alumnos/{id} - Actualizar datos personales del alumno.
+
+GET /api/alumnos/{id}/tutores - Listar los tutores de un alumno.
+
+POST /api/alumnos/{id}/tutores - Agregar un tutor al alumno.
+
+POST /api/inscripciones - Inscribir a un alumno en un grupo y ciclo (inscripciones).
+
+4. Discapacidades, BAP y Áreas de Atención
+GET /api/catalogos/discapacidades - Listar catálogo de discapacidades, BAP y AS.
+
+GET /api/catalogos/areas-atencion - Listar catálogo de áreas (Psicología, Aprendizaje, etc.).
+
+GET /api/alumnos/{id}/discapacidades - Obtener las condiciones/BAP registradas del alumno.
+
+POST /api/alumnos/{id}/discapacidades - Asignar un diagnóstico o BAP a un alumno.
+
+POST /api/alumnos/{id}/areas-atencion - Asignar áreas de atención requeridas para el alumno.
+
+POST /api/alumnos/{id}/modalidad-atencion - Registrar la modalidad de atención (Inicial/Final).
+
+5. Flujo de Canalizaciones
+GET /api/canalizaciones - Listar hojas de canalización (filtrables por estado, solicitante o receptor).
+
+POST /api/canalizaciones - Crear una nueva solicitud de canalización.
+
+PUT /api/canalizaciones/{id}/estado - Actualizar el estado de la canalización (ej. PENDIENTE a EN_PROCESO).
+
+6. Evaluación Psicopedagógica
+GET /api/evaluaciones-psicopedagogicas - Listar evaluaciones (filtrables por alumno y ciclo).
+
+POST /api/evaluaciones-psicopedagogicas - Crear el borrador de una evaluación psicopedagógica.
+
+PUT /api/evaluaciones-psicopedagogicas/{id} - Actualizar secciones de la evaluación (Desarrollo, Contextos, Conclusiones).
+
+POST /api/evaluaciones-psicopedagogicas/{id}/bap - Agregar indicadores BAP a la evaluación.
+
+POST /api/evaluaciones-psicopedagogicas/{id}/colaboradores - Gestionar las firmas y colaboradores de la evaluación.
+
+7. Instrumento CIE Z03 (Comunicación)
+GET /api/cie/catalogos/dimensiones - Listar dimensiones, indicadores y subindicadores.
+
+GET /api/cie/evaluaciones - Listar evaluaciones CIE realizadas.
+
+POST /api/cie/evaluaciones - Iniciar una nueva evaluación CIE para un alumno.
+
+POST /api/cie/evaluaciones/{id}/respuestas - Guardar o actualizar respuestas de subindicadores.
+
+POST /api/cie/evaluaciones/{id}/fonoarticulador - Guardar respuestas específicas del aparato fonoarticulador.
+
+8. Detección TEA Nivel 1 (Screening)
+GET /api/tea/indicadores - Listar el catálogo de indicadores TEA.
+
+GET /api/tea/screenings - Listar tamizajes TEA realizados.
+
+POST /api/tea/screenings - Iniciar un nuevo screening TEA para un alumno.
+
+POST /api/tea/screenings/{id}/respuestas - Registrar la frecuencia e intensidad de los indicadores observados (gatilla el Trigger de puntaje).
+
+9. Material Didáctico y Diálogos Animados
+GET /api/catalogos/tipos-material - Listar tipos de materiales.
+
+GET /api/materiales - Buscar materiales didácticos (por tag, dimensión o grado).
+
+POST /api/materiales - Subir/crear un nuevo material didáctico.
+
+POST /api/materiales/{id}/tags - Asignar etiquetas (tags) al material.
+
+GET /api/dialogos - Listar diálogos animados interactivos.
+
+POST /api/dialogos - Crear la estructura (JSON) de un diálogo animado.
+
+10. Asignaciones y Progreso (Para el Alumno)
+GET /api/asignaciones - Listar tareas/materiales asignados a un grupo o alumnos.
+
+POST /api/asignaciones - Crear una asignación de material para alumnos.
+
+PUT /api/asignaciones/alumnos/{id}/estado - Actualizar el progreso del alumno en la asignación.
+
+POST /api/dialogos/{id}/progreso - Registrar el avance de un alumno en un diálogo animado (escena actual, puntaje).
+
+11. Reportes, Notificaciones y Vistas
+GET /api/reportes/sabana-datos - Exportar la "Sábana de datos" (consulta a v_sabana_datos).
+
+GET /api/reportes/resumen-cie - Obtener métricas de logro por alumno (consulta a v_resumen_cie).
+
+GET /api/reportes/alertas-tea - Obtener alumnos con alertas TEA significativas (consulta a v_alertas_tea).
+
+POST /api/reportes - Generar y guardar un nuevo reporte en PDF/JSON (reportes).
+
+GET /api/notificaciones - Listar notificaciones del usuario autenticado.
+
+PUT /api/notificaciones/{id}/leer - Marcar una notificación como leída.
