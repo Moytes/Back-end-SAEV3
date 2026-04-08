@@ -135,4 +135,11 @@ public class AuthController(
             user.UpdatedAt
         });
     }
+
+    [HttpGet("HealthCheck")]
+    [AllowAnonymous]
+    public IActionResult HealthCheck()
+    {
+        return StandardSuccess(200, "API is healthy");
+    }
 }
