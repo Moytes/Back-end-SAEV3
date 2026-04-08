@@ -102,24 +102,24 @@ var app = builder.Build();
 // APLICAR MIGRACIONES AUTOMÁTICAMENTE
 // ====================================================================
 
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AppDbContext>();
+//using (var scope = app.Services.CreateScope())
+//{
+//    var services = scope.ServiceProvider;
+//    try
+//    {
+//        var context = services.GetRequiredService<AppDbContext>();
         
-        // Aplicar migraciones pendientes
-        context.Database.Migrate();
+//        // Aplicar migraciones pendientes
+//        context.Database.Migrate();
         
-        app.Logger.LogInformation("Database migrations applied successfully.");
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogError(ex, "An error occurred while migrating the database.");
-        throw;
-    }
-}
+//        app.Logger.LogInformation("Database migrations applied successfully.");
+//    }
+//    catch (Exception ex)
+//    {
+//        app.Logger.LogError(ex, "An error occurred while migrating the database.");
+//        throw;
+//    }
+//}
 
 // ====================================================================
 // CONFIGURACIÓN DEL PIPELINE HTTP
