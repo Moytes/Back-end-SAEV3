@@ -92,7 +92,11 @@ public class AuthController(
                     .GetRequiredService<IConfiguration>()["Jwt:ExpirationInMinutes"]!))
         });
 
-        return StandardSuccess(200, "Login successful");
+        return StandardSuccess(200, "Login successful", new
+        {
+            role = user.Role.ToString(),
+            token = token
+        });
     }
 
     [HttpPost("logout")]
