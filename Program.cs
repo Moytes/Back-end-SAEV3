@@ -21,8 +21,8 @@ var builder = WebApplication.CreateBuilder(args);
 // ====================================================================
 
 // Obtener connection string
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("SupabaseConnection")
+    ?? throw new InvalidOperationException("Connection string 'SupabaseConnection' not found.");
 
 // Configurar Entity Framework Core con PostgreSQL y Snake Case
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -49,6 +49,7 @@ builder.Services.AddScoped<IJWTService, JWTService>();
 // Repositories
 builder.Services.AddScoped<IUserRepositorie, UserRepositorie>();
 builder.Services.AddScoped<IServiceRepositorie, ServiceRepositorie>();
+builder.Services.AddScoped<IAdminCatalogRepositorie, AdminCatalogRepositorie>();
 
 // ====================================================================
 // Settings para el JWT
