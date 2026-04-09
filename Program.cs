@@ -57,6 +57,9 @@ builder.Services.AddScoped<IPsychoeducationalAssessmentRepositorie, Psychoeducat
 builder.Services.AddScoped<ICIERepositorie, CIERepositorie>();
 builder.Services.AddScoped<ITEARepositorie, TEARepositorie>();
 builder.Services.AddScoped<IMaterialRepositorie, MaterialRepositorie>();
+builder.Services.AddScoped<IAssignmentRepositorie, AssignmentRepositorie>();
+builder.Services.AddScoped<IReportRepositorie, ReportRepositorie>();
+builder.Services.AddScoped<INotificationRepositorie, NotificationRepositorie>();
 
 // ====================================================================
 // Settings para el JWT
