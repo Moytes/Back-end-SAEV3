@@ -55,6 +55,7 @@ builder.Services.AddScoped<IStudentSupportRepositorie, StudentSupportRepositorie
 builder.Services.AddScoped<ICanalizationRepositorie, CanalizationRepositorie>();
 builder.Services.AddScoped<IPsychoeducationalAssessmentRepositorie, PsychoeducationalAssessmentRepositorie>();
 builder.Services.AddScoped<ICIERepositorie, CIERepositorie>();
+builder.Services.AddScoped<ITEARepositorie, TEARepositorie>();
 
 // ====================================================================
 // Settings para el JWT
