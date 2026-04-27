@@ -21,8 +21,8 @@ var builder = WebApplication.CreateBuilder(args);
 // ====================================================================
 
 // Obtener connection string
-var connectionString = builder.Configuration.GetConnectionString("SupabaseConnection")
-    ?? throw new InvalidOperationException("Connection string 'SupabaseConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 // Configurar Entity Framework Core con PostgreSQL y Snake Case
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -37,6 +37,21 @@ DefaultTypeMap.MatchNamesWithUnderscores = true;
 // Registrar IDbConnection para Dapper
 builder.Services.AddScoped<IDbConnection>(sp => 
     new NpgsqlConnection(connectionString));
+
+// ====================================================================
+// CONFIGURACIÓN DE CORS
+// ====================================================================
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularDev", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials(); // Permitir cookies/credenciales si se requieren
+    });
+});
 
 // ====================================================================
 // SERVICIOS Y REPOSITORIOS
@@ -84,7 +99,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnMessageReceived = context =>
             {
                 var token = context.Request.Headers["Authorization"]
-                    .FirstOrDefault()?.Split(" ").Last();
+                    .FirstOrDefault()?.Split(" ").Last();   
 
                 if (string.IsNullOrEmpty(token))
                     token = context.Request.Cookies["jwt"];
@@ -113,24 +128,23 @@ var app = builder.Build();
 // APLICAR MIGRACIONES AUTOMÁTICAMENTE
 // ====================================================================
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var services = scope.ServiceProvider;
-//    try
-//    {
-//        var context = services.GetRequiredService<AppDbContext>();
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
         
-//        // Aplicar migraciones pendientes
-//        context.Database.Migrate();
+        // Aplicar migraciones pendientes
+        context.Database.Migrate();
         
-//        app.Logger.LogInformation("Database migrations applied successfully.");
-//    }
-//    catch (Exception ex)
-//    {
-//        app.Logger.LogError(ex, "An error occurred while migrating the database.");
-//        throw;
-//    }
-//}
+        app.Logger.LogInformation("Database migrations applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
 
 // ====================================================================
 // CONFIGURACIÓN DEL PIPELINE HTTP
@@ -152,6 +166,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAngularDev");
 
 app.UseAuthentication();
 app.UseAuthorization();

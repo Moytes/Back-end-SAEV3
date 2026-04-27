@@ -26,7 +26,10 @@ public enum UserRole
     TRABAJO_SOCIAL = 7,
 
     [Display(Name = "Docente de grupo regular")]
-    DOCENTE = 8
+    DOCENTE = 8,
+
+    [Display(Name = "Alumno")]
+    STUDENT = 9
 }
 
 public class User
@@ -48,4 +51,8 @@ public class User
     // Relation with school zone (optional)
     public SchoolZone? SchoolZone { get; set; }
     public Guid? SchoolZoneId { get; set; }
+
+    // Relation with student (optional, used for student login)
+    public Student? Student { get; set; }
+    public Guid? StudentId { get; set; }
 }

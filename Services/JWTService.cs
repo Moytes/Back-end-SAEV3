@@ -10,7 +10,7 @@ public class JWTService(IConfiguration configuration) : IJWTService
 {
     private readonly IConfiguration _configuration = configuration;
 
-    public async Task<string> GenerateToken(Guid userId, string role)
+    public async Task<string> GenerateToken(Guid userId, string role, Guid? studentId = null)
     {
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]!));
@@ -23,6 +23,11 @@ public class JWTService(IConfiguration configuration) : IJWTService
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Role, role)
         };
+
+        if (studentId.HasValue)
+        {
+            claims.Add(new Claim("studentId", studentId.Value.ToString()));
+        }
 
         var token = new JwtSecurityToken(
             issuer: _configuration["Jwt:Issuer"],

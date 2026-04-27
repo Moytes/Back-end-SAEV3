@@ -2,5 +2,5 @@
 
 public interface IJWTService
 {
-    Task<string> GenerateToken(Guid userId, string permissions);
+    Task<string> GenerateToken(Guid userId, string permissions, Guid? studentId = null);
 }

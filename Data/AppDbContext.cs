@@ -89,6 +89,12 @@ public class AppDbContext : DbContext
             .HasForeignKey(u => u.SchoolZoneId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Student)
+            .WithMany()
+            .HasForeignKey(u => u.StudentId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // School relationships
         modelBuilder.Entity<School>()
             .HasOne(s => s.SchoolZone)

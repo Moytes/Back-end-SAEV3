@@ -79,7 +79,7 @@ public class AuthController(
             return UnauthorizedResponse("User account is inactive");
 
         // Generate JWT token
-        var token = await _jwtService.GenerateToken(user.Id, user.Role.ToString());
+        var token = await _jwtService.GenerateToken(user.Id, user.Role.ToString(), user.StudentId);
 
         // Set JWT in HTTP-only cookie
         Response.Cookies.Append("jwt", token, new CookieOptions

@@ -776,4 +776,4 @@ FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
 CREATE TRIGGER trg_eval_psico_upd BEFORE UPDATE ON evaluaciones_psicopedagogicas
 FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
 
-COMMIT;
+COMMIT; 
