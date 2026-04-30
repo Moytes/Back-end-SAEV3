@@ -39,6 +39,24 @@ public class UserRepositorie : IUserRepositorie
                 return Result<Guid>.Failure(SchoolErrors.SchoolZoneNotFound);
         }
 
+        if (request.StudentId.HasValue)
+        {
+            var studentExists = await _context.Student
+                .AnyAsync(s => s.Id == request.StudentId.Value);
+
+            if (!studentExists)
+                return Result<Guid>.Failure(StudentErrors.StudentNotFound);
+
+            var studentAccountExists = await _context.User
+                .AnyAsync(u => u.StudentId == request.StudentId.Value);
+
+            if (studentAccountExists)
+                return Result<Guid>.Failure(UserErrors.StudentAlreadyHasUserAccount);
+        }
+
+        if (request.Role == UserRole.STUDENT && !request.StudentId.HasValue)
+            return Result<Guid>.Failure(UserErrors.StudentIdRequiredForStudentRole);
+
         var user = new User
         {
             Id = Guid.NewGuid(),
@@ -48,6 +66,7 @@ public class UserRepositorie : IUserRepositorie
             MotherLastName = request.MotherLastName,
             Role = request.Role,
             SchoolZoneId = request.SchoolZoneId,
+            StudentId = request.StudentId,
             PhoneNumber = request.PhoneNumber,
             AvatarUrl = request.AvatarUrl,
             PasswordHash = passwordHash,
@@ -130,12 +149,31 @@ public class UserRepositorie : IUserRepositorie
                 return Result<bool>.Failure(SchoolErrors.SchoolZoneNotFound);
         }
 
+        if (request.StudentId.HasValue)
+        {
+            var studentExists = await _context.Student
+                .AnyAsync(s => s.Id == request.StudentId.Value);
+
+            if (!studentExists)
+                return Result<bool>.Failure(StudentErrors.StudentNotFound);
+
+            var studentAccountExists = await _context.User
+                .AnyAsync(u => u.StudentId == request.StudentId.Value && u.Id != userId);
+
+            if (studentAccountExists)
+                return Result<bool>.Failure(UserErrors.StudentAlreadyHasUserAccount);
+        }
+
+        if (request.Role == UserRole.STUDENT && !request.StudentId.HasValue)
+            return Result<bool>.Failure(UserErrors.StudentIdRequiredForStudentRole);
+
         user.Email = request.Email;
         user.Name = request.Name;
         user.FatherLastName = request.FatherLastName;
         user.MotherLastName = request.MotherLastName;
         user.Role = request.Role;
         user.SchoolZoneId = request.SchoolZoneId;
+        user.StudentId = request.StudentId;
         user.PhoneNumber = request.PhoneNumber;
         user.AvatarUrl = request.AvatarUrl;
         user.Status = request.Status;

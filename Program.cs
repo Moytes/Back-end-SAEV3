@@ -21,7 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ====================================================================
 
 // Obtener connection string
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+var connectionString = builder.Configuration.GetConnectionString("SupabaseConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 // Configurar Entity Framework Core con PostgreSQL y Snake Case
@@ -164,8 +164,10 @@ if (app.Environment.IsDevelopment())
             .WithDefaultHttpClient(Scalar.AspNetCore.ScalarTarget.CSharp, Scalar.AspNetCore.ScalarClient.HttpClient);
     });
 }
-
-app.UseHttpsRedirection();
+else
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors("AllowAngularDev");
 

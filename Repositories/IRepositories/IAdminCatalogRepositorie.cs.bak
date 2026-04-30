@@ -1,4 +1,4 @@
-using Models.Dto;
+﻿using Models.Dto;
 using Models.Request;
 using Utilities.Abstractions;
 
@@ -13,5 +13,6 @@ public interface IAdminCatalogRepositorie
     Task<IEnumerable<GroupListItemDto>> GetGroups(Guid? schoolId = null, Guid? schoolYearId = null);
     Task<Result<Guid>> CreateSchoolZone(AddSchoolZoneRequest request);
     Task<Result<Guid>> CreateSchool(AddSchoolRequest request);
+
     Task<Result<Guid>> CreateGroup(AddGroupRequest request);
 }

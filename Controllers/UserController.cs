@@ -86,7 +86,18 @@ public class UserController(
         var user = await _userRepository.CreateUser(request, passwordSalt, passwordHash);
 
         if (!user.IsSuccess)
+        {
+            if (user.error.Code == UserErrors.EmailAlreadyExists.Code ||
+                user.error.Code == UserErrors.StudentAlreadyHasUserAccount.Code ||
+                user.error.Code == UserErrors.StudentIdRequiredForStudentRole.Code)
+                return StandardError(409, user.error.Message);
+
+            if (user.error.Code == StudentErrors.StudentNotFound.Code ||
+                user.error.Code == SchoolErrors.SchoolZoneNotFound.Code)
+                return StandardError(404, user.error.Message);
+
             return StandardError(400, user.error.Message);
+        }
 
         await _serviceRepositorie.AddLog(new AuditLog
         {
@@ -109,10 +120,14 @@ public class UserController(
 
         if (!result.IsSuccess)
         {
-            if (result.error.Code == UserErrors.UserNotFound.Code)
+            if (result.error.Code == UserErrors.UserNotFound.Code ||
+                result.error.Code == StudentErrors.StudentNotFound.Code ||
+                result.error.Code == SchoolErrors.SchoolZoneNotFound.Code)
                 return StandardError(404, result.error.Message);
 
-            if (result.error.Code == UserErrors.EmailAlreadyExists.Code)
+            if (result.error.Code == UserErrors.EmailAlreadyExists.Code ||
+                result.error.Code == UserErrors.StudentAlreadyHasUserAccount.Code ||
+                result.error.Code == UserErrors.StudentIdRequiredForStudentRole.Code)
                 return StandardError(409, result.error.Message);
 
             return StandardError(400, result.error.Message);

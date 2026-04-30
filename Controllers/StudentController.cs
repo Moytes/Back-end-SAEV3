@@ -62,6 +62,7 @@ public class StudentController(
     }
 
     [HttpPost("alumnos")]
+    [Authorize(Roles = "ADMIN,DIRECTOR_USAER,TRABAJO_SOCIAL")]
     public async Task<IActionResult> CreateStudent([FromBody] AddStudentRequest request)
     {
         if (!ModelState.IsValid)
@@ -101,6 +102,7 @@ public class StudentController(
     }
 
     [HttpPut("alumnos/{id:guid}")]
+    [Authorize(Roles = "ADMIN,DIRECTOR_USAER,TRABAJO_SOCIAL")]
     public async Task<IActionResult> UpdateStudent(Guid id, [FromBody] UpdateStudentRequest request)
     {
         if (!ModelState.IsValid)
@@ -143,6 +145,7 @@ public class StudentController(
     }
 
     [HttpPost("alumnos/{id:guid}/tutores")]
+    [Authorize(Roles = "ADMIN,DIRECTOR_USAER,TRABAJO_SOCIAL")]
     public async Task<IActionResult> AddTutor(Guid id, [FromBody] AddTutorRequest request)
     {
         if (!ModelState.IsValid)
@@ -179,6 +182,7 @@ public class StudentController(
     }
 
     [HttpPost("inscripciones")]
+    [Authorize(Roles = "ADMIN,DIRECTOR_USAER,ESPECIALISTA_COM,ESPECIALISTA_PSI,ESPECIALISTA_APR,TRABAJO_SOCIAL")]
     public async Task<IActionResult> AddRegistration([FromBody] AddRegistrationRequest request)
     {
         if (!ModelState.IsValid)

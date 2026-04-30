@@ -4,7 +4,7 @@ public class Group
 {
     public Guid Id { get; set; }
     public grades Grade { get; set; }
-    public char Section { get; set; } = 'A';
+    public string Section { get; set; } = "A";
 
     // Relation with School
     public School School { get; set; } = null!;
