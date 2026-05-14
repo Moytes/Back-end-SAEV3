@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models.DB;
 using Models.Request;
@@ -18,33 +18,6 @@ public class CanalizationController(
     private readonly ICanalizationRepositorie _canalizationRepositorie = canalizationRepositorie;
     private readonly IServiceRepositorie _serviceRepositorie = serviceRepositorie;
 
-    private IActionResult StandardSuccess(int httpStatusCode, string message, object? data = null)
-    {
-        var responseData = data switch
-        {
-            null => Array.Empty<object>(),
-            System.Collections.IEnumerable enumerable when data is not string => enumerable.Cast<object>().ToArray(),
-            _ => new[] { data }
-        };
-
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = responseData
-        });
-    }
-
-    private IActionResult StandardError(int httpStatusCode, string message)
-    {
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = Array.Empty<object>()
-        });
-    }
-
     private Guid? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -58,14 +31,14 @@ public class CanalizationController(
         [FromQuery] Guid? receiverId = null)
     {
         var result = await _canalizationRepositorie.GetCanalizations(status, requesterId, receiverId);
-        return StandardSuccess(200, "Canalizations retrieved successfully", result);
+        return Ok(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateCanalization([FromBody] AddCanalizationRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _canalizationRepositorie.CreateCanalization(request);
 
@@ -75,12 +48,12 @@ public class CanalizationController(
                 result.error.Code == SchoolErrors.SchoolYearNotFound.Code ||
                 result.error.Code == AttentionAreaErrors.AttentionAreaNotFound.Code ||
                 result.error.Code == UserErrors.UserNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == CanalizationErrors.RequesterAndReceiverMustBeDifferent.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -92,26 +65,26 @@ public class CanalizationController(
             Request = System.Text.Json.JsonSerializer.Serialize(request)
         });
 
-        return StandardSuccess(201, "Canalization created successfully", result.Value);
+        return StatusCode(201, result.Value);
     }
 
     [HttpPut("{id:guid}/estado")]
     public async Task<IActionResult> UpdateCanalizationStatus(Guid id, [FromBody] UpdateCanalizationStatusRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _canalizationRepositorie.UpdateCanalizationStatus(id, request);
 
         if (!result.IsSuccess)
         {
             if (result.error.Code == CanalizationErrors.CanalizationNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == CanalizationErrors.ClosedCanalizationCannotBeReopened.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -123,6 +96,6 @@ public class CanalizationController(
             Request = System.Text.Json.JsonSerializer.Serialize(request)
         });
 
-        return StandardSuccess(200, "Canalization status updated successfully", new { id });
+        return Ok(new { id });
     }
 }

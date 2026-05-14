@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models.DB;
 using Models.Request;
@@ -21,33 +21,6 @@ public class StudentSupportController(
     private readonly IStudentRepositorie _studentRepositorie = studentRepositorie;
     private readonly IServiceRepositorie _serviceRepositorie = serviceRepositorie;
 
-    private IActionResult StandardSuccess(int httpStatusCode, string message, object? data = null)
-    {
-        var responseData = data switch
-        {
-            null => Array.Empty<object>(),
-            System.Collections.IEnumerable enumerable when data is not string => enumerable.Cast<object>().ToArray(),
-            _ => new[] { data }
-        };
-
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = responseData
-        });
-    }
-
-    private IActionResult StandardError(int httpStatusCode, string message)
-    {
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = Array.Empty<object>()
-        });
-    }
-
     private Guid? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -58,14 +31,14 @@ public class StudentSupportController(
     public async Task<IActionResult> GetDisabilityCatalog()
     {
         var result = await _studentSupportRepositorie.GetDisabilityCatalog();
-        return StandardSuccess(200, "Disability catalog retrieved successfully", result);
+        return Ok(result);
     }
 
     [HttpGet("catalogos/areas-atencion")]
     public async Task<IActionResult> GetAttentionAreasCatalog()
     {
         var result = await _studentSupportRepositorie.GetAttentionAreasCatalog();
-        return StandardSuccess(200, "Attention areas catalog retrieved successfully", result);
+        return Ok(result);
     }
 
     [HttpGet("alumnos/{id:guid}/discapacidades")]
@@ -73,17 +46,17 @@ public class StudentSupportController(
     {
         var student = await _studentRepositorie.GetStudentById(id);
         if (student == null)
-            return StandardError(404, StudentErrors.StudentNotFound.Message);
+            return NotFound(StudentErrors.StudentNotFound.Message);
 
         var result = await _studentSupportRepositorie.GetStudentDisabilities(id);
-        return StandardSuccess(200, "Student disabilities retrieved successfully", result);
+        return Ok(result);
     }
 
     [HttpPost("alumnos/{id:guid}/discapacidades")]
     public async Task<IActionResult> AddStudentDisability(Guid id, [FromBody] AddStudentDisabilityRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _studentSupportRepositorie.AddStudentDisability(id, request);
 
@@ -92,12 +65,12 @@ public class StudentSupportController(
             if (result.error.Code == StudentErrors.StudentNotFound.Code ||
                 result.error.Code == DisabilityErrors.DisabilityNotFound.Code ||
                 result.error.Code == SchoolErrors.SchoolYearNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == DisabilityErrors.StudentDisabilityAlreadyExists.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -117,14 +90,14 @@ public class StudentSupportController(
             })
         });
 
-        return StandardSuccess(201, "Student disability assigned successfully", result.Value);
+        return StatusCode(201, result.Value);
     }
 
     [HttpPost("alumnos/{id:guid}/areas-atencion")]
     public async Task<IActionResult> AssignStudentAttentionAreas(Guid id, [FromBody] AssignStudentAttentionAreasRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _studentSupportRepositorie.AssignStudentAttentionAreas(id, request);
 
@@ -133,12 +106,12 @@ public class StudentSupportController(
             if (result.error.Code == StudentErrors.StudentNotFound.Code ||
                 result.error.Code == SchoolErrors.SchoolYearNotFound.Code ||
                 result.error.Code == AttentionAreaErrors.AttentionAreaNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == AttentionAreaErrors.DuplicateAttentionAreasInRequest.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -155,14 +128,14 @@ public class StudentSupportController(
             })
         });
 
-        return StandardSuccess(200, "Student attention areas assigned successfully", result.Value);
+        return Ok(result.Value);
     }
 
     [HttpPost("alumnos/{id:guid}/modalidad-atencion")]
     public async Task<IActionResult> AddAttentionMode(Guid id, [FromBody] AddAttentionModeRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _studentSupportRepositorie.AddAttentionMode(id, request);
 
@@ -170,12 +143,12 @@ public class StudentSupportController(
         {
             if (result.error.Code == StudentErrors.StudentNotFound.Code ||
                 result.error.Code == SchoolErrors.SchoolYearNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == AttentionModeErrors.AttentionModeAlreadyExists.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -193,6 +166,6 @@ public class StudentSupportController(
             })
         });
 
-        return StandardSuccess(201, "Attention mode registered successfully", result.Value);
+        return StatusCode(201, result.Value);
     }
 }

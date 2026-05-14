@@ -20,63 +20,25 @@ public class AuthController(
     private readonly IPasswordHashService _passwordHashService = passwordHashService;
     private readonly IJWTService _jwtService = jwtService;
 
-    // Helpers for standardized responses
-    private IActionResult StandardSuccess(int httpStatusCode, string message, object? data = null)
-    {
-        var responseData = data switch
-        {
-            null => Array.Empty<object>(),
-            System.Collections.IEnumerable enumerable when data is not string => enumerable.Cast<object>().ToArray(),
-            _ => new[] { data }
-        };
-
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = responseData
-        });
-    }
-
-    private IActionResult StandardError(int httpStatusCode, string message)
-    {
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = Array.Empty<object>()
-        });
-    }
-
-    private IActionResult UnauthorizedResponse(string message = "Invalid or missing user authentication")
-    {
-        return StandardError(401, message);
-    }
-
-    private IActionResult ForbiddenResponse(string message)
-    {
-        return StandardError(403, message);
-    }
-
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         // Get user by email
         var user = await _userRepositorie.GetUserByEmail(request.Email);
         if (user == null)
-            return UnauthorizedResponse();
+            return Unauthorized("Invalid or missing user authentication");
 
         // Verify password
         var isPasswordValid = _passwordHashService.VerifyPassword(request.Password, user.PasswordHash, user.PasswordSalt);
         if (!isPasswordValid)
-            return UnauthorizedResponse("Invalid credentials");
+            return Unauthorized("Invalid credentials");
 
         // Check if user is active
         if (user.Status != Models.DB.boolStatus.True)
-            return UnauthorizedResponse("User account is inactive");
+            return Unauthorized("User account is inactive");
 
         // Generate JWT token
         var token = await _jwtService.GenerateToken(user.Id, user.Role.ToString(), user.StudentId);
@@ -92,7 +54,7 @@ public class AuthController(
                     .GetRequiredService<IConfiguration>()["Jwt:ExpirationInMinutes"]!))
         });
 
-        return StandardSuccess(200, "Login successful", new
+        return Ok(new
         {
             role = user.Role.ToString(),
             token = token
@@ -100,13 +62,12 @@ public class AuthController(
     }
 
     [HttpPost("logout")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult Logout()
     {
         // Remove JWT cookie
         Response.Cookies.Delete("jwt");
 
-        return StandardSuccess(200, "Logout successful");
+        return Ok("Logout successful");
     }
 
     [HttpGet("me")]
@@ -116,15 +77,15 @@ public class AuthController(
         // Get user ID from claims
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
-            return UnauthorizedResponse();
+            return Unauthorized();
 
         // Get user from database
         var user = await _userRepositorie.GetUserById(userId);
 
         if (user == null)
-            return UnauthorizedResponse("User not found");
+            return Unauthorized("User not found");
 
-        return StandardSuccess(200, "User information retrieved successfully", new
+        return Ok(new
         {
             user.Id,
             user.Email,
@@ -144,6 +105,7 @@ public class AuthController(
     [AllowAnonymous]
     public IActionResult HealthCheck()
     {
-        return StandardSuccess(200, "API is healthy");
+        return Ok("API is healthy");
     }
 }
+

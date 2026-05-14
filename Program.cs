@@ -11,6 +11,8 @@ using Services;
 using Services.IServices;
 using System.Data;
 using System.Text;
+using Utilities.Filters;
+using Utilities.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -116,13 +118,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // OTROS SERVICIOS
 // ====================================================================
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<JSchemaResultFilter>();
+});
 
 // OpenAPI and Scalar Documentation
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
+
+// Middleware Global de Excepciones
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 // ====================================================================
 // APLICAR MIGRACIONES AUTOMÁTICAMENTE

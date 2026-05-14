@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models.DB;
 using Models.Request;
@@ -21,33 +21,6 @@ public class AssignmentController(
     private readonly IStudentRepositorie _studentRepositorie = studentRepositorie;
     private readonly IServiceRepositorie _serviceRepositorie = serviceRepositorie;
 
-    private IActionResult StandardSuccess(int httpStatusCode, string message, object? data = null)
-    {
-        var responseData = data switch
-        {
-            null => Array.Empty<object>(),
-            System.Collections.IEnumerable enumerable when data is not string => enumerable.Cast<object>().ToArray(),
-            _ => new[] { data }
-        };
-
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = responseData
-        });
-    }
-
-    private IActionResult StandardError(int httpStatusCode, string message)
-    {
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = Array.Empty<object>()
-        });
-    }
-
     private Guid? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -58,7 +31,7 @@ public class AssignmentController(
     public async Task<IActionResult> CreateAssignment([FromBody] AddAssignmentRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _assignmentRepositorie.CreateAssignment(request);
 
@@ -69,9 +42,9 @@ public class AssignmentController(
                 result.error.Code == SchoolErrors.SchoolYearNotFound.Code ||
                 result.error.Code == GroupErrors.GroupNotFound.Code ||
                 result.error.Code == StudentErrors.StudentNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -83,7 +56,7 @@ public class AssignmentController(
             Request = System.Text.Json.JsonSerializer.Serialize(request)
         });
 
-        return StandardSuccess(201, "Assignment created successfully", result.Value);
+        return StatusCode(201, result.Value);
     }
 
     [HttpGet("alumnos/{id:guid}/asignaciones")]
@@ -91,26 +64,26 @@ public class AssignmentController(
     {
         var student = await _studentRepositorie.GetStudentById(id);
         if (student == null)
-            return StandardError(404, StudentErrors.StudentNotFound.Message);
+            return NotFound(StudentErrors.StudentNotFound.Message);
 
         var result = await _assignmentRepositorie.GetAssignmentsByStudent(id);
-        return StandardSuccess(200, "Student assignments retrieved successfully", result);
+        return Ok(result);
     }
 
     [HttpPost("asignaciones-alumnos/{id:guid}/completar")]
     public async Task<IActionResult> CompleteAssignmentStudent(Guid id, [FromBody] CompleteAssignmentStudentRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _assignmentRepositorie.CompleteAssignmentStudent(id, request);
 
         if (!result.IsSuccess)
         {
             if (result.error.Code == AssignmentErrors.AssignmentStudentNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -122,14 +95,14 @@ public class AssignmentController(
             Request = System.Text.Json.JsonSerializer.Serialize(request)
         });
 
-        return StandardSuccess(200, "Assignment student completed successfully", new { id });
+        return Ok(new { id });
     }
 
     [HttpPost("dialogos/{id:guid}/progreso")]
     public async Task<IActionResult> AddDialogProgress(Guid id, [FromBody] AddDialogProgressRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _assignmentRepositorie.AddDialogProgress(id, request);
 
@@ -138,13 +111,13 @@ public class AssignmentController(
             if (result.error.Code == DialogErrors.DialogNotFound.Code ||
                 result.error.Code == StudentErrors.StudentNotFound.Code ||
                 result.error.Code == AssignmentErrors.AssignmentStudentNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == DialogErrors.AssignmentStudentDoesNotBelongToStudent.Code ||
                 result.error.Code == DialogErrors.DialogDoesNotBelongToAssignmentMaterial.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -166,6 +139,6 @@ public class AssignmentController(
             })
         });
 
-        return StandardSuccess(201, "Dialog progress created successfully", result.Value);
+        return StatusCode(201, result.Value);
     }
 }

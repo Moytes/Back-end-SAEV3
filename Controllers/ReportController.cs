@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models.DB;
 using Repositories.IRepositories;
@@ -14,30 +14,13 @@ public class ReportController(
 {
     private readonly IReportRepositorie _reportRepositorie = reportRepositorie;
 
-    private IActionResult StandardSuccess(int httpStatusCode, string message, object? data = null)
-    {
-        var responseData = data switch
-        {
-            null => Array.Empty<object>(),
-            System.Collections.IEnumerable enumerable when data is not string => enumerable.Cast<object>().ToArray(),
-            _ => new[] { data }
-        };
-
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = responseData
-        });
-    }
-
     [HttpGet("sabana-datos")]
     public async Task<IActionResult> GetStudentDataSheet(
         [FromQuery] Guid? schoolId = null,
         [FromQuery] Guid? schoolYearId = null)
     {
         var result = await _reportRepositorie.GetStudentDataSheet(schoolId, schoolYearId);
-        return StandardSuccess(200, "Student data sheet retrieved successfully", result);
+        return Ok(result);
     }
 
     [HttpGet("resumen-cie")]
@@ -46,7 +29,7 @@ public class ReportController(
         [FromQuery] Guid? schoolYearId = null)
     {
         var result = await _reportRepositorie.GetCIESummary(studentId, schoolYearId);
-        return StandardSuccess(200, "CIE summary retrieved successfully", result);
+        return Ok(result);
     }
 
     [HttpGet("alertas-tea")]
@@ -55,6 +38,6 @@ public class ReportController(
         [FromQuery] alertLevel? alertLevel = null)
     {
         var result = await _reportRepositorie.GetTEAAlerts(schoolYearId, alertLevel);
-        return StandardSuccess(200, "TEA alerts retrieved successfully", result);
+        return Ok(result);
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,38 +19,11 @@ public class AdminCatalogController(
 {
     private readonly IAdminCatalogRepositorie _adminCatalogRepositorie = adminCatalogRepositorie;
 
-    private IActionResult StandardSuccess(int httpStatusCode, string message, object? data = null)
-    {
-        var responseData = data switch
-        {
-            null => Array.Empty<object>(),
-            System.Collections.IEnumerable enumerable when data is not string => enumerable.Cast<object>().ToArray(),
-            _ => new[] { data }
-        };
-
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = responseData
-        });
-    }
-
-    private IActionResult StandardError(int httpStatusCode, string message)
-    {
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = Array.Empty<object>()
-        });
-    }
-
     [HttpGet("ciclos-escolares")]
     public async Task<IActionResult> GetSchoolYears([FromQuery] bool? onlyActive = null)
     {
         var result = await _adminCatalogRepositorie.GetSchoolYears(onlyActive);
-        return StandardSuccess(200, "School years retrieved successfully", result);
+        return Ok(result);
     }
 
     [HttpPost("ciclos-escolares")]
@@ -58,21 +31,21 @@ public class AdminCatalogController(
     public async Task<IActionResult> CreateSchoolYear([FromBody] AddSchoolYearRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _adminCatalogRepositorie.CreateSchoolYear(request);
 
         if (!result.IsSuccess)
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
 
-        return StandardSuccess(201, "School year created successfully", result.Value);
+        return StatusCode(201, result.Value);
     }
 
     [HttpGet("zonas-escolares")]
     public async Task<IActionResult> GetSchoolZones()
     {
         var result = await _adminCatalogRepositorie.GetSchoolZones();
-        return StandardSuccess(200, "School zones retrieved successfully", result);
+        return Ok(result);
     }
 
     [HttpPost("zonas-escolares")]
@@ -80,26 +53,26 @@ public class AdminCatalogController(
     public async Task<IActionResult> CreateSchoolZone([FromBody] AddSchoolZoneRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _adminCatalogRepositorie.CreateSchoolZone(request);
 
         if (!result.IsSuccess)
         {
             if (result.error.Code == SchoolErrors.CctAlreadyExists.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
-        return StandardSuccess(201, "School zone created successfully", result.Value);
+        return StatusCode(201, result.Value);
     }
 
     [HttpGet("escuelas")]
     public async Task<IActionResult> GetSchools([FromQuery] Guid? schoolZoneId = null)
     {
         var result = await _adminCatalogRepositorie.GetSchools(schoolZoneId);
-        return StandardSuccess(200, "Schools retrieved successfully", result);
+        return Ok(result);
     }
 
     [HttpGet("grados")]
@@ -113,7 +86,7 @@ public class AdminCatalogController(
                 Label = GetDisplayName(g)
             });
 
-        return StandardSuccess(200, "Grades retrieved successfully", gradesList);
+        return Ok(gradesList);
     }
 
     [HttpGet("grupos")]
@@ -122,7 +95,7 @@ public class AdminCatalogController(
         [FromQuery] Guid? schoolYearId = null)
     {
         var result = await _adminCatalogRepositorie.GetGroups(schoolId, schoolYearId);
-        return StandardSuccess(200, "Groups retrieved successfully", result);
+        return Ok(result);
     }
 
     [HttpPost("escuelas")]
@@ -130,22 +103,22 @@ public class AdminCatalogController(
     public async Task<IActionResult> CreateSchool([FromBody] AddSchoolRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _adminCatalogRepositorie.CreateSchool(request);
 
         if (!result.IsSuccess)
         {
             if (result.error.Code == SchoolErrors.SchoolZoneNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == SchoolErrors.CctAlreadyExists.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
-        return StandardSuccess(201, "School created successfully", result.Value);
+        return StatusCode(201, result.Value);
     }
 
     [HttpPost("grupos")]
@@ -157,7 +130,7 @@ public class AdminCatalogController(
             var errorMessages = string.Join(" | ", ModelState.Values
                 .SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage));
-            return StandardError(400, $"Errores de validación: {errorMessages}");
+            return BadRequest($"Errores de validación: {errorMessages}");
         }
 
         var result = await _adminCatalogRepositorie.CreateGroup(request);
@@ -166,15 +139,15 @@ public class AdminCatalogController(
         {
             if (result.error.Code == SchoolErrors.SchoolNotFound.Code ||
                 result.error.Code == SchoolErrors.SchoolYearNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == GroupErrors.GroupAlreadyExists.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
-        return StandardSuccess(201, "Group created successfully", result.Value);
+        return StatusCode(201, result.Value);
     }
 
     private static string GetDisplayName(Enum value)

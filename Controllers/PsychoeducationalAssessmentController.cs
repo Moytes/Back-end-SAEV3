@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models.DB;
 using Models.Request;
@@ -19,33 +19,6 @@ public class PsychoeducationalAssessmentController(
     private readonly IPsychoeducationalAssessmentRepositorie _psychoeducationalAssessmentRepositorie = psychoeducationalAssessmentRepositorie;
     private readonly IServiceRepositorie _serviceRepositorie = serviceRepositorie;
 
-    private IActionResult StandardSuccess(int httpStatusCode, string message, object? data = null)
-    {
-        var responseData = data switch
-        {
-            null => Array.Empty<object>(),
-            System.Collections.IEnumerable enumerable when data is not string => enumerable.Cast<object>().ToArray(),
-            _ => new[] { data }
-        };
-
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = responseData
-        });
-    }
-
-    private IActionResult StandardError(int httpStatusCode, string message)
-    {
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = Array.Empty<object>()
-        });
-    }
-
     private Guid? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -58,14 +31,14 @@ public class PsychoeducationalAssessmentController(
         [FromQuery] Guid? schoolYearId = null)
     {
         var result = await _psychoeducationalAssessmentRepositorie.GetAssessments(studentId, schoolYearId);
-        return StandardSuccess(200, "Psychoeducational assessments retrieved successfully", result);
+        return Ok(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateAssessment([FromBody] AddPsychoeducationalAssessmentRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _psychoeducationalAssessmentRepositorie.CreateAssessment(request);
 
@@ -73,12 +46,12 @@ public class PsychoeducationalAssessmentController(
         {
             if (result.error.Code == StudentErrors.StudentNotFound.Code ||
                 result.error.Code == SchoolErrors.SchoolYearNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == PsychoeducationalAssessmentErrors.AssessmentAlreadyExistsForStudentAndSchoolYear.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -90,26 +63,26 @@ public class PsychoeducationalAssessmentController(
             Request = System.Text.Json.JsonSerializer.Serialize(request)
         });
 
-        return StandardSuccess(201, "Psychoeducational assessment created successfully", result.Value);
+        return StatusCode(201, result.Value);
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateAssessment(Guid id, [FromBody] UpdatePsychoeducationalAssessmentRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _psychoeducationalAssessmentRepositorie.UpdateAssessment(id, request);
 
         if (!result.IsSuccess)
         {
             if (result.error.Code == PsychoeducationalAssessmentErrors.AssessmentNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == PsychoeducationalAssessmentErrors.DeliveredAssessmentCannotBeEdited.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -121,26 +94,26 @@ public class PsychoeducationalAssessmentController(
             Request = System.Text.Json.JsonSerializer.Serialize(request)
         });
 
-        return StandardSuccess(200, "Psychoeducational assessment updated successfully", new { id });
+        return Ok(new { id });
     }
 
     [HttpPost("{id:guid}/bap")]
     public async Task<IActionResult> SyncBaps(Guid id, [FromBody] ManagePsychoBapsRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _psychoeducationalAssessmentRepositorie.SyncBaps(id, request);
 
         if (!result.IsSuccess)
         {
             if (result.error.Code == PsychoeducationalAssessmentErrors.AssessmentNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == PsychoeducationalAssessmentErrors.DeliveredAssessmentCannotBeEdited.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -156,14 +129,14 @@ public class PsychoeducationalAssessmentController(
             })
         });
 
-        return StandardSuccess(200, "Assessment BAP indicators synchronized successfully", result.Value);
+        return Ok(result.Value);
     }
 
     [HttpPost("{id:guid}/colaboradores")]
     public async Task<IActionResult> SyncCollaborators(Guid id, [FromBody] ManagePsychoCollaboratorsRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _psychoeducationalAssessmentRepositorie.SyncCollaborators(id, request);
 
@@ -171,15 +144,15 @@ public class PsychoeducationalAssessmentController(
         {
             if (result.error.Code == PsychoeducationalAssessmentErrors.AssessmentNotFound.Code ||
                 result.error.Code == UserErrors.UserNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == PsychoeducationalAssessmentErrors.DeliveredAssessmentCannotBeEdited.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
             if (result.error.Code == PsychoeducationalAssessmentErrors.ExternalCollaboratorNameRequired.Code)
-                return StandardError(400, result.error.Message);
+                return BadRequest(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -195,6 +168,6 @@ public class PsychoeducationalAssessmentController(
             })
         });
 
-        return StandardSuccess(200, "Assessment collaborators synchronized successfully", result.Value);
+        return Ok(result.Value);
     }
 }

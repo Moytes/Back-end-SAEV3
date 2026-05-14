@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models.DB;
 using Models.Request;
@@ -19,33 +19,6 @@ public class NotificationController(
     private readonly INotificationRepositorie _notificationRepositorie = notificationRepositorie;
     private readonly IServiceRepositorie _serviceRepositorie = serviceRepositorie;
 
-    private IActionResult StandardSuccess(int httpStatusCode, string message, object? data = null)
-    {
-        var responseData = data switch
-        {
-            null => Array.Empty<object>(),
-            System.Collections.IEnumerable enumerable when data is not string => enumerable.Cast<object>().ToArray(),
-            _ => new[] { data }
-        };
-
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = responseData
-        });
-    }
-
-    private IActionResult StandardError(int httpStatusCode, string message)
-    {
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = Array.Empty<object>()
-        });
-    }
-
     private Guid? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -57,26 +30,26 @@ public class NotificationController(
     {
         var userId = GetCurrentUserId();
         if (!userId.HasValue)
-            return StandardError(401, "Invalid or missing user authentication");
+            return Unauthorized("Invalid or missing user authentication");
 
         var result = await _notificationRepositorie.GetNotificationsByUser(userId.Value);
-        return StandardSuccess(200, "Notifications retrieved successfully", result);
+        return Ok(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateNotification([FromBody] AddNotificationRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _notificationRepositorie.CreateNotification(request);
 
         if (!result.IsSuccess)
         {
             if (result.error.Code == UserErrors.UserNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -88,7 +61,7 @@ public class NotificationController(
             Request = System.Text.Json.JsonSerializer.Serialize(request)
         });
 
-        return StandardSuccess(201, "Notification created successfully", result.Value);
+        return StatusCode(201, result.Value);
     }
 
     [HttpPost("{id:guid}/leer")]
@@ -99,9 +72,9 @@ public class NotificationController(
         if (!result.IsSuccess)
         {
             if (result.error.Code == NotificationErrors.NotificationNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -113,6 +86,6 @@ public class NotificationController(
             Request = "{}"
         });
 
-        return StandardSuccess(200, "Notification marked as read", new { id });
+        return Ok(new { id });
     }
 }

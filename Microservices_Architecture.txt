@@ -1,0 +1,75 @@
+# ESTRATEGIA DE MICROSERVICIOS - PROYECTO USEBEQ (SAEV3)
+# ESTÁNDAR DE COMUNICACIÓN Y TRAZABILIDAD
+
+Este documento detalla la arquitectura de microservicios, el API Gateway y el esquema de respuesta unificado para garantizar que el Front-end pueda identificar rápidamente el origen de cualquier fallo.
+
+---
+
+## 1. ESTÁNDAR DE RESPUESTA UNIFICADO (JSchema)
+
+Para que el Front-end (Angular) sepa exactamente quién está respondiendo o fallando, todos los componentes (Gateway y Microservicios) DEBEN retornar el siguiente esquema:
+
+```json
+{
+  "statusCode": 200,
+  "intOpCode": "SERVICE_CODE_STATUS",
+  "data": [] 
+}
+```
+
+### Tabla de Identificación (intOpCode)
+El `intOpCode` es la clave para la depuración en producción:
+
+| Componente | Prefijo intOpCode | Ejemplo Éxito | Ejemplo Error |
+| :--- | :--- | :--- | :--- |
+| **API Gateway** | `GW_` | `GW_200` | `GW_429` (Rate Limit) |
+| **MS 1: Identity** | `ID_` | `ID_200` | `ID_401` (Unauthorized) |
+| **MS 2: Student** | `ST_` | `ST_200` | `ST_404` (Student Not Found) |
+| **MS 3: Clinical (Rust)** | `CL_` | `CL_200` | `CL_500` (Calculation Error) |
+
+---
+
+## 2. ARQUITECTURA GENERAL Y VALIDACIÓN
+
+### A. API Gateway (Filtro de Seguridad L1)
+*   **Rate Limiting:** Control de tráfico por IP. Si falla, el `intOpCode` debe ser `GW_429`.
+*   **JSON Schema Validation:** Valida que el `body` de la petición sea correcto. Si falla, retorna `GW_400`.
+*   **Transformación de Respuesta:** Si un microservicio devuelve un error crudo, el Gateway lo envuelve en el JSchema estándar antes de mandarlo al Front-end.
+
+---
+
+## 3. DESGLOSE DE MICROSERVICIOS (L2 & L3)
+
+### MS 1: Identity & Admin Catalog (.NET 10)
+*   **Dominio:** Auth, Usuarios, Catálogos Maestros.
+*   **Validación:** RBAC (Roles) y integridad de catálogos.
+*   **Ejemplo Respuesta:** 
+    `{ "statusCode": 401, "intOpCode": "ID_401", "data": "Credenciales inválidas" }`
+
+### MS 2: Student & Academic Management (.NET 10)
+*   **Dominio:** Expedientes, Inscripciones, Materiales, Asignaciones.
+*   **Validación:** Pertenencia (¿El docente tiene permiso sobre este alumno?).
+*   **Ejemplo Respuesta:** 
+    `{ "statusCode": 200, "intOpCode": "ST_200", "data": [{ "name": "Juan Pérez", ... }] }`
+
+### MS 3: Clinical Intelligence & Analytics (Rust)
+*   **Dominio:** Evaluaciones CIE, TEA, Psicoeducativas, Reportes PDF.
+*   **Validación:** Lógica clínica, estados de evaluación, integridad matemática.
+*   **Ejemplo Respuesta:** 
+    `{ "statusCode": 201, "intOpCode": "CL_201", "data": { "score": 45, "alert": "High" } }`
+
+---
+
+## 4. FLUJO DE DEPURACIÓN (DIAGNÓSTICO RÁPIDO)
+
+1.  **¿El JSON no tiene `intOpCode`?** -> El error es de infraestructura (servidor caído o NGINX mal configurado).
+2.  **¿`intOpCode` empieza con `GW_`?** -> El problema está en el Gateway (Rate limit, Auth mal configurada o JSON mal formado).
+3.  **¿`intOpCode` empieza con `ID_`, `ST_` o `CL_`?** -> El problema es lógica de negocio dentro del microservicio específico.
+4.  **¿`statusCode` es 200 pero `data` está vacío?** -> Error de consulta o filtro en la base de datos del microservicio.
+
+---
+
+## 5. IMPLEMENTACIÓN TÉCNICA (Middleware)
+
+*   **En .NET (MS 1 y 2):** Se implementará un `IResultFilter` o un `Middleware` global que capture la respuesta del controlador y la encapsule en el objeto `JSchema`.
+*   **En Rust (MS 3):** Se usará un `Responder` personalizado en Axum/Actix que garantice que toda estructura devuelta cumpla con los campos `statusCode`, `intOpCode` y `data`.

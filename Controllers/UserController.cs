@@ -25,34 +25,8 @@ public class UserController(
     private readonly IServiceRepositorie _serviceRepositorie = serviceRepositorie;
     private readonly IPasswordHashService _passwordHashService = passwordHashService;
 
-    private IActionResult StandardSuccess(int httpStatusCode, string message, object? data = null)
-    {
-        var responseData = data switch
-        {
-            null => Array.Empty<object>(),
-            System.Collections.IEnumerable enumerable when data is not string => enumerable.Cast<object>().ToArray(),
-            _ => new[] { data }
-        };
-
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = responseData
-        });
-    }
-
-    private IActionResult StandardError(int httpStatusCode, string message)
-    {
-        return StatusCode(httpStatusCode, new
-        {
-            statusCode = httpStatusCode,
-            message,
-            data = Array.Empty<object>()
-        });
-    }
-
     [HttpGet("/api/roles")]
+    [Authorize(Roles = "ADMIN,DIRECTOR_USAER")]
     public IActionResult GetRoles()
     {
         var roles = Enum.GetValues<UserRole>()
@@ -62,24 +36,25 @@ public class UserController(
                 Value = r.ToString()
             });
 
-        return StandardSuccess(200, "Roles retrieved successfully", roles);
+        return Ok(roles);
     }
 
     [HttpGet]
+    [Authorize(Roles = "ADMIN,DIRECTOR_USAER")]
     public async Task<IActionResult> GetUsers(
         [FromQuery] UserRole? role,
         [FromQuery] Guid? schoolZoneId,
         [FromQuery] Guid? schoolId)
     {
         var users = await _userRepository.GetUsers(role, schoolZoneId, schoolId);
-        return StandardSuccess(200, "Users retrieved successfully", users);
+        return Ok(users);
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] AddUserRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var passwordHash = _passwordHashService.HashPassword(request.Password, out string passwordSalt);
 
@@ -90,13 +65,13 @@ public class UserController(
             if (user.error.Code == UserErrors.EmailAlreadyExists.Code ||
                 user.error.Code == UserErrors.StudentAlreadyHasUserAccount.Code ||
                 user.error.Code == UserErrors.StudentIdRequiredForStudentRole.Code)
-                return StandardError(409, user.error.Message);
+                return Conflict(user.error.Message);
 
             if (user.error.Code == StudentErrors.StudentNotFound.Code ||
                 user.error.Code == SchoolErrors.SchoolZoneNotFound.Code)
-                return StandardError(404, user.error.Message);
+                return NotFound(user.error.Message);
 
-            return StandardError(400, user.error.Message);
+            return BadRequest(user.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -107,14 +82,14 @@ public class UserController(
             Request = System.Text.Json.JsonSerializer.Serialize(request)
         });
 
-        return StandardSuccess(201, "User created successfully", user.Value);
+        return StatusCode(201, user.Value);
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _userRepository.UpdateUser(id, request);
 
@@ -123,14 +98,14 @@ public class UserController(
             if (result.error.Code == UserErrors.UserNotFound.Code ||
                 result.error.Code == StudentErrors.StudentNotFound.Code ||
                 result.error.Code == SchoolErrors.SchoolZoneNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == UserErrors.EmailAlreadyExists.Code ||
                 result.error.Code == UserErrors.StudentAlreadyHasUserAccount.Code ||
                 result.error.Code == UserErrors.StudentIdRequiredForStudentRole.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -141,14 +116,14 @@ public class UserController(
             Request = System.Text.Json.JsonSerializer.Serialize(request)
         });
 
-        return StandardSuccess(200, "User updated successfully", new { id });
+        return Ok(new { id });
     }
 
     [HttpPost("{id:guid}/grupos")]
     public async Task<IActionResult> AssignUserToGroup(Guid id, [FromBody] AssignUserGroupRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _userRepository.AssignUserToGroup(id, request);
 
@@ -157,12 +132,12 @@ public class UserController(
             if (result.error.Code == UserErrors.UserNotFound.Code ||
                 result.error.Code == GroupErrors.GroupNotFound.Code ||
                 result.error.Code == SchoolErrors.SchoolYearNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == UserErrors.UserGroupAssignmentAlreadyExists.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -179,14 +154,14 @@ public class UserController(
             })
         });
 
-        return StandardSuccess(201, "User assigned to group successfully", result.Value);
+        return StatusCode(201, result.Value);
     }
 
     [HttpPost("{id:guid}/escuelas")]
     public async Task<IActionResult> AssignUserToSchool(Guid id, [FromBody] AssignUserSchoolRequest request)
     {
         if (!ModelState.IsValid)
-            return StandardError(400, "Invalid request");
+            return BadRequest("Invalid request");
 
         var result = await _userRepository.AssignUserToSchool(id, request);
 
@@ -195,12 +170,12 @@ public class UserController(
             if (result.error.Code == UserErrors.UserNotFound.Code ||
                 result.error.Code == SchoolErrors.SchoolNotFound.Code ||
                 result.error.Code == SchoolErrors.SchoolYearNotFound.Code)
-                return StandardError(404, result.error.Message);
+                return NotFound(result.error.Message);
 
             if (result.error.Code == UserErrors.UserSchoolAssignmentAlreadyExists.Code)
-                return StandardError(409, result.error.Message);
+                return Conflict(result.error.Message);
 
-            return StandardError(400, result.error.Message);
+            return BadRequest(result.error.Message);
         }
 
         await _serviceRepositorie.AddLog(new AuditLog
@@ -216,6 +191,6 @@ public class UserController(
             })
         });
 
-        return StandardSuccess(201, "User assigned to school successfully", result.Value);
+        return StatusCode(201, result.Value);
     }
 }
