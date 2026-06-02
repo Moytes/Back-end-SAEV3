@@ -27,7 +27,7 @@ public class AdminCatalogController(
     }
 
     [HttpPost("ciclos-escolares")]
-    [Authorize(Roles = "ADMIN,DIRECTOR_USAER")]
+    [Authorize(Roles = "ADMIN,DIRECTOR_USAER,TRABAJO_SOCIAL")]
     public async Task<IActionResult> CreateSchoolYear([FromBody] AddSchoolYearRequest request)
     {
         if (!ModelState.IsValid)
@@ -78,7 +78,7 @@ public class AdminCatalogController(
     [HttpGet("grados")]
     public IActionResult GetGrades()
     {
-        var gradesList = Enum.GetValues<grades>()
+        var gradesList = Enum.GetValues<Grades>()
             .Select(g => new EnumOptionDto
             {
                 Key = (int)g,
@@ -99,7 +99,7 @@ public class AdminCatalogController(
     }
 
     [HttpPost("escuelas")]
-    [Authorize(Roles = "ADMIN,DIRECTOR_USAER")]
+    [Authorize(Roles = "ADMIN,DIRECTOR_USAER,TRABAJO_SOCIAL")]
     public async Task<IActionResult> CreateSchool([FromBody] AddSchoolRequest request)
     {
         if (!ModelState.IsValid)
@@ -122,7 +122,7 @@ public class AdminCatalogController(
     }
 
     [HttpPost("grupos")]
-    [Authorize(Roles = "ADMIN,DIRECTOR_USAER")]
+    [Authorize(Roles = "ADMIN,DIRECTOR_USAER,TRABAJO_SOCIAL")]
     public async Task<IActionResult> CreateGroup([FromBody] AddGroupRequest request)
     {
         if (!ModelState.IsValid)

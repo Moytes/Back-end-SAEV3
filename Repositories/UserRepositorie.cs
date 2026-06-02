@@ -71,13 +71,38 @@ public class UserRepositorie : IUserRepositorie
             AvatarUrl = request.AvatarUrl,
             PasswordHash = passwordHash,
             PasswordSalt = passwordSalt,
-            Status = boolStatus.True,
+            Status = BoolStatus.True,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
         await _context.User.AddAsync(user);
         await _context.SaveChangesAsync();
+
+        // Assign to school if provided
+        if (request.SchoolId.HasValue)
+        {
+            var schoolYearId = request.SchoolYearId;
+            if (!schoolYearId.HasValue)
+            {
+                var activeYear = await _context.SchoolYear
+                    .FirstOrDefaultAsync(sy => sy.Status == BoolStatus.True);
+                schoolYearId = activeYear?.Id;
+            }
+
+            if (schoolYearId.HasValue)
+            {
+                var userSchool = new UserSchools
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    SchoolId = request.SchoolId.Value,
+                    SchoolYearId = schoolYearId.Value
+                };
+                await _context.UserSchool.AddAsync(userSchool);
+                await _context.SaveChangesAsync();
+            }
+        }
 
         return Result<Guid>.Success(user.Id);
     }
@@ -109,12 +134,15 @@ public class UserRepositorie : IUserRepositorie
                 u.avatar_url AS AvatarUrl,
                 u.status,
                 u.created_at AS CreatedAt,
-                u.updated_at AS UpdatedAt
+                u.updated_at AS UpdatedAt,
+                COALESCE(s.name, 'Acceso Global') AS SchoolName
             FROM "user" u
             LEFT JOIN "user_school" us ON us.user_id = u.id
+            LEFT JOIN "school" s ON s.id = us.school_id
             WHERE (@Role IS NULL OR u.role = @Role)
               AND (@SchoolZoneId IS NULL OR u.school_zone_id = @SchoolZoneId)
               AND (@SchoolId IS NULL OR us.school_id = @SchoolId)
+              AND u.role != 9
             ORDER BY u.name, u.father_last_name, u.mother_last_name;
             """;
 
@@ -266,5 +294,27 @@ public class UserRepositorie : IUserRepositorie
         await _context.SaveChangesAsync();
 
         return Result<Guid>.Success(entity.Id);
+    }
+
+    public async Task<IEnumerable<Guid>> GetUserSchools(Guid userId)
+    {
+        var user = await _context.User.FindAsync(userId);
+        
+        var explicitSchools = await _context.UserSchool
+            .Where(us => us.UserId == userId)
+            .Select(us => us.SchoolId)
+            .ToListAsync();
+
+        if (user?.SchoolZoneId != null)
+        {
+            var zoneSchools = await _context.School
+                .Where(s => s.SchoolZoneId == user.SchoolZoneId)
+                .Select(s => s.Id)
+                .ToListAsync();
+
+            return explicitSchools.Union(zoneSchools).Distinct().ToList();
+        }
+
+        return explicitSchools;
     }
 }

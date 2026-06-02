@@ -17,7 +17,7 @@ public class UpdateStudentRequest
     public string? MotherLastName { get; set; }
 
     [Required]
-    public gender Gender { get; set; }
+    public Gender Gender { get; set; }
 
     [Required]
     public DateOnly BirthDate { get; set; }
@@ -27,5 +27,5 @@ public class UpdateStudentRequest
 
     public string? PhotoUrl { get; set; }
 
-    public boolStatus Status { get; set; }
+    public BoolStatus Status { get; set; }
 }

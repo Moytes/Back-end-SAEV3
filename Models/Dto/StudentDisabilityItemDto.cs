@@ -12,7 +12,7 @@ public class StudentDisabilityItemDto
     public disabilitiesCategory DisabilityCategory { get; set; }
     public Guid SchoolYearId { get; set; }
     public string SchoolYearName { get; set; } = null!;
-    public boolStatus ExternalDiagnosis { get; set; }
+    public BoolStatus ExternalDiagnosis { get; set; }
     public string? FileUrl { get; set; }
     public string? Notes { get; set; }
 }

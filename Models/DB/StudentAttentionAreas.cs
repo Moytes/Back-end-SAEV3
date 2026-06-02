@@ -3,7 +3,7 @@
 public class StudentAttentionAreas
 {
     public Guid Id { get; set; }
-    public boolStatus IsRequired { get; set; } = boolStatus.True;
+    public BoolStatus IsRequired { get; set; } = BoolStatus.True;
     public string? Notes { get; set; }
 
     // Student

@@ -1,12 +1,12 @@
 ﻿namespace Models.DB;
 
-public enum phases
+public enum Phases
 {
     INICIAL = 1,
     FINAL = 2
 }
 
-public enum attentionTypes
+public enum AttentionTypes
 {
     PLAN_INDIVIDUAL = 1,
     PLAN_ESCUELA = 2
@@ -15,8 +15,8 @@ public enum attentionTypes
 public class AttentionMode
 {
     public Guid Id { get; set; }
-    public phases Phase { get; set; }
-    public attentionTypes Type { get; set; }
+    public Phases Phase { get; set; }
+    public AttentionTypes Type { get; set; }
 
     // Student
     public Student Student { get; set; } = null!;

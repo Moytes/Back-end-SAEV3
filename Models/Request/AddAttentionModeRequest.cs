@@ -9,8 +9,8 @@ public class AddAttentionModeRequest
     public Guid SchoolYearId { get; set; }
 
     [Required]
-    public phases Phase { get; set; }
+    public Phases Phase { get; set; }
 
     [Required]
-    public attentionTypes Type { get; set; }
+    public AttentionTypes Type { get; set; }
 }

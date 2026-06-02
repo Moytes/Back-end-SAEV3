@@ -2,13 +2,13 @@
 
 namespace Models.DB;
 
-public enum boolStatus
+public enum BoolStatus
 {
     False = 0,
     True = 1
 }
 
-public enum grades
+public enum Grades
 {
     [Display(Name = "Primero")]
     first = 1,

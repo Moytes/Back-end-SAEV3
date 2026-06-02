@@ -8,11 +8,11 @@ public class StudentListItemDto
     public string Name { get; set; } = null!;
     public string FatherLastName { get; set; } = null!;
     public string? MotherLastName { get; set; }
-    public gender Gender { get; set; }
+    public Gender Gender { get; set; }
     public DateOnly BirthDate { get; set; }
     public string? CURP { get; set; }
     public string? PhotoUrl { get; set; }
-    public boolStatus Status { get; set; }
+    public BoolStatus Status { get; set; }
 
     public Guid? SchoolId { get; set; }
     public string? SchoolName { get; set; }

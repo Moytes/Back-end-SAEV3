@@ -16,6 +16,6 @@ public class TEAScreeningListItemDto
     public string? GeneralObservations { get; set; }
     public short? TotalScore { get; set; }
     public alertLevel? AlertLevel { get; set; }
-    public boolStatus RequiresCanalization { get; set; }
+    public BoolStatus RequiresCanalization { get; set; }
     public DateTime CreatedAt { get; set; }
 }

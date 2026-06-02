@@ -37,7 +37,7 @@ public class AuthController(
             return Unauthorized("Invalid credentials");
 
         // Check if user is active
-        if (user.Status != Models.DB.boolStatus.True)
+        if (user.Status != Models.DB.BoolStatus.True)
             return Unauthorized("User account is inactive");
 
         // Generate JWT token
@@ -85,6 +85,9 @@ public class AuthController(
         if (user == null)
             return Unauthorized("User not found");
 
+        // Get assigned schools for this user
+        var schoolIds = await _userRepositorie.GetUserSchools(userId);
+
         return Ok(new
         {
             user.Id,
@@ -97,7 +100,9 @@ public class AuthController(
             user.Status,
             user.AvatarUrl,
             user.CreatedAt,
-            user.UpdatedAt
+            user.UpdatedAt,
+            schoolIds = schoolIds,
+            schoolZoneId = user.SchoolZoneId
         });
     }
 

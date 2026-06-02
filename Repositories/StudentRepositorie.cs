@@ -30,7 +30,7 @@ public class StudentRepositorie : IStudentRepositorie
                 s.name,
                 s.father_last_name AS FatherLastName,
                 s.mother_last_name AS MotherLastName,
-                s.gender,
+                s.Gender,
                 s.birth_date AS BirthDate,
                 s.curp,
                 s.photo_url AS PhotoUrl,
@@ -91,7 +91,7 @@ public class StudentRepositorie : IStudentRepositorie
             BirthDate = request.BirthDate,
             CURP = request.CURP,
             PhotoUrl = request.PhotoUrl,
-            Status = boolStatus.True,
+            Status = BoolStatus.True,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -116,7 +116,7 @@ public class StudentRepositorie : IStudentRepositorie
                 s.name,
                 s.father_last_name AS FatherLastName,
                 s.mother_last_name AS MotherLastName,
-                s.gender,
+                s.Gender,
                 s.birth_date AS BirthDate,
                 s.curp,
                 s.photo_url AS PhotoUrl,

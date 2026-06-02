@@ -11,8 +11,8 @@ public class MaterialListItemDto
     public short? GradeMax { get; set; }
     public string? FileUrl { get; set; }
     public string? ThumbnailUrl { get; set; }
-    public boolStatus AutoEvaluation { get; set; }
-    public boolStatus Published { get; set; }
+    public BoolStatus AutoEvaluation { get; set; }
+    public BoolStatus Published { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public Guid CreatorId { get; set; }

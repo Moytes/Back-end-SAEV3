@@ -7,6 +7,6 @@ public class AttentionModeItemDto
     public Guid Id { get; set; }
     public Guid StudentId { get; set; }
     public Guid SchoolYearId { get; set; }
-    public phases Phase { get; set; }
-    public attentionTypes Type { get; set; }
+    public Phases Phase { get; set; }
+    public AttentionTypes Type { get; set; }
 }

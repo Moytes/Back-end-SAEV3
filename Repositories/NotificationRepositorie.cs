@@ -52,7 +52,7 @@ public class NotificationRepositorie : INotificationRepositorie
             Title = request.Title,
             Message = request.Message,
             DestinationUrl = request.DestinationUrl,
-            Read = boolStatus.False,
+            Read = BoolStatus.False,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -69,7 +69,7 @@ public class NotificationRepositorie : INotificationRepositorie
         if (entity == null)
             return Result<bool>.Failure(NotificationErrors.NotificationNotFound);
 
-        entity.Read = boolStatus.True;
+        entity.Read = BoolStatus.True;
 
         await _context.SaveChangesAsync();
 

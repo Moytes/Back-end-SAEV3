@@ -13,8 +13,9 @@ namespace SIAEV2.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260407214028_init")]
-    partial class init
+    partial class Init
     {
+
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

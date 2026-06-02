@@ -12,8 +12,8 @@ public class StudentRegistrationItemDto
     public Guid SchoolYearId { get; set; }
     public string SchoolYearName { get; set; } = null!;
     public DateOnly IngressDate { get; set; }
-    public boolStatus ItsNew { get; set; }
-    public boolStatus ItsTracking { get; set; }
+    public BoolStatus ItsNew { get; set; }
+    public BoolStatus ItsTracking { get; set; }
     public finalSituation FinalSituation { get; set; }
     public string? Notes { get; set; }
 }

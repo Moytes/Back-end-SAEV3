@@ -28,7 +28,7 @@ public class AddMaterialRequest
     public string? ContentJson { get; set; }
     public string? FileUrl { get; set; }
     public string? ThumbnailUrl { get; set; }
-    public boolStatus AutoEvaluation { get; set; } = boolStatus.False;
+    public BoolStatus AutoEvaluation { get; set; } = BoolStatus.False;
     public string? CriteriaJson { get; set; }
-    public boolStatus Published { get; set; } = boolStatus.False;
+    public BoolStatus Published { get; set; } = BoolStatus.False;
 }

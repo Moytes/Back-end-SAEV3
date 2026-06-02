@@ -16,7 +16,7 @@ public class TEAScreening
     public string? GeneralObservations { get; set; }
     public short? TotalScore { get; set; }
     public alertLevel? AlertLevel { get; set; }
-    public boolStatus RequiresCanalization { get; set; } = boolStatus.False;
+    public BoolStatus RequiresCanalization { get; set; } = BoolStatus.False;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Student

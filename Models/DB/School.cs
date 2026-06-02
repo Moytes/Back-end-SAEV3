@@ -14,7 +14,7 @@ public class School
     public string? CCT { get; set; }
     public Turns Turn { get; set; } = Turns.MATUTINO;
     public string? Address { get; set; }
-    public boolStatus Status { get; set; } = boolStatus.True;
+    public BoolStatus Status { get; set; } = BoolStatus.True;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Relation with school zone

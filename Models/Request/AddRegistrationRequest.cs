@@ -15,8 +15,8 @@ public class AddRegistrationRequest
     public Guid SchoolYearId { get; set; }
 
     public DateOnly? IngressDate { get; set; }
-    public boolStatus ItsNew { get; set; } = boolStatus.False;
-    public boolStatus ItsTracking { get; set; } = boolStatus.False;
+    public BoolStatus ItsNew { get; set; } = BoolStatus.False;
+    public BoolStatus ItsTracking { get; set; } = BoolStatus.False;
     public finalSituation FinalSituation { get; set; } = finalSituation.SEGUIMIENTO;
     public string? Notes { get; set; }
 }

@@ -6,7 +6,7 @@ public class Assignment
     public DateTime AssignmentDate { get; set; } = DateTime.UtcNow;
     public DateOnly? DueDate { get; set; }
     public string? Instructions { get; set; }
-    public boolStatus Active { get; set; } = boolStatus.True;
+    public BoolStatus Active { get; set; } = BoolStatus.True;
 
     // Material
     public Material Material { get; set; } = null!;

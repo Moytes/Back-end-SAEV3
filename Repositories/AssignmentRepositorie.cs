@@ -62,7 +62,7 @@ public class AssignmentRepositorie : IAssignmentRepositorie
             AssignmentDate = request.AssignedDate?.ToDateTime(TimeOnly.MinValue) ?? DateTime.UtcNow,
             DueDate = request.DueDate,
             Instructions = request.Instructions,
-            Active = boolStatus.True
+            Active = BoolStatus.True
         };
 
         await _context.Assignment.AddAsync(assignment);
@@ -190,9 +190,9 @@ public class AssignmentRepositorie : IAssignmentRepositorie
                 emotionDetected = request.EmotionDetected,
                 voiceText = request.VoiceText
             }),
-            Completed = request.Completed ?? boolStatus.False,
+            Completed = request.Completed ?? BoolStatus.False,
             StartDate = DateTime.UtcNow,
-            EndDate = request.Completed == boolStatus.True ? DateTime.UtcNow : null
+            EndDate = request.Completed == BoolStatus.True ? DateTime.UtcNow : null
         };
 
         await _context.DialogProgress.AddAsync(progress);
@@ -200,11 +200,11 @@ public class AssignmentRepositorie : IAssignmentRepositorie
         if (assignmentStudent.Status == assignmentStudentStatus.PENDIENTE)
             assignmentStudent.StartDate = DateTime.UtcNow;
 
-        assignmentStudent.Status = progress.Completed == boolStatus.True
+        assignmentStudent.Status = progress.Completed == BoolStatus.True
             ? assignmentStudentStatus.COMPLETADO
             : assignmentStudentStatus.EN_PROGRESO;
 
-        if (progress.Completed == boolStatus.True)
+        if (progress.Completed == BoolStatus.True)
             assignmentStudent.CompletedDate = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

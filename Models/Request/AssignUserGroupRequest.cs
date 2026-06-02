@@ -11,5 +11,5 @@ public class AssignUserGroupRequest
     [Required]
     public Guid SchoolYearId { get; set; }
 
-    public boolStatus EsTitular { get; set; } = boolStatus.False;
+    public BoolStatus EsTitular { get; set; } = BoolStatus.False;
 }

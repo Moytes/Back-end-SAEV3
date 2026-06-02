@@ -22,7 +22,7 @@ public class ReportRepositorie : IReportRepositorie
             SELECT
                 s.id AS StudentId,
                 CONCAT(s.name, ' ', s.father_last_name, ' ', COALESCE(s.mother_last_name, '')) AS StudentFullName,
-                s.gender,
+                s.Gender,
                 s.birth_date AS BirthDate,
                 s.curp,
 

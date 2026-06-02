@@ -12,5 +12,5 @@ public class TEAAlertItemDto
     public DateOnly ScreeningDate { get; set; }
     public short? TotalScore { get; set; }
     public alertLevel? AlertLevel { get; set; }
-    public boolStatus RequiresCanalization { get; set; }
+    public BoolStatus RequiresCanalization { get; set; }
 }

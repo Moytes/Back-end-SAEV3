@@ -10,9 +10,9 @@ public class Material
     public string? ContentJson { get; set; } // JSONB
     public string? FileUrl { get; set; }
     public string? ThumbnailUrl { get; set; }
-    public boolStatus AutoEvaluation { get; set; } = boolStatus.False;
+    public BoolStatus AutoEvaluation { get; set; } = BoolStatus.False;
     public string? CriteriaJson { get; set; } // JSONB
-    public boolStatus Published { get; set; } = boolStatus.False;
+    public BoolStatus Published { get; set; } = BoolStatus.False;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

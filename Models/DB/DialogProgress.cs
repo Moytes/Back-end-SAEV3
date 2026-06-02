@@ -6,7 +6,7 @@ public class DialogProgress
     public short CurrentScene { get; set; } = 0;
     public string? ResponsesJson { get; set; } // JSONB
     public decimal? Score { get; set; }
-    public boolStatus Completed { get; set; } = boolStatus.False;
+    public BoolStatus Completed { get; set; } = BoolStatus.False;
     public DateTime StartDate { get; set; } = DateTime.UtcNow;
     public DateTime? EndDate { get; set; }
 

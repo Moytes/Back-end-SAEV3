@@ -8,6 +8,6 @@ public class StudentAttentionAreaAssignmentItemRequest
     [Required]
     public Guid AttentionAreaId { get; set; }
 
-    public boolStatus IsRequired { get; set; } = boolStatus.True;
+    public BoolStatus IsRequired { get; set; } = BoolStatus.True;
     public string? Notes { get; set; }
 }

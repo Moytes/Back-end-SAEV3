@@ -3,7 +3,7 @@
 public class Group
 {
     public Guid Id { get; set; }
-    public grades Grade { get; set; }
+    public Grades Grade { get; set; }
     public string Section { get; set; } = "A";
 
     // Relation with School

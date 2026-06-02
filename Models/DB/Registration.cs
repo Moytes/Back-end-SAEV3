@@ -11,8 +11,8 @@ public class Registration
 {
     public Guid Id { get; set; }
     public DateOnly IngressDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
-    public boolStatus ItsNew { get; set; } = boolStatus.False;
-    public boolStatus ItsTracking { get; set; } = boolStatus.False;
+    public BoolStatus ItsNew { get; set; } = BoolStatus.False;
+    public BoolStatus ItsTracking { get; set; } = BoolStatus.False;
     public finalSituation FinalSituation { get; set; }
     public string? Notes { get; set; }
 

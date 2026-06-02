@@ -12,5 +12,5 @@ public class StudentAddDialogProgressRequest
     public string? ChosenOption { get; set; }
     public string? EmotionDetected { get; set; }
     public string? VoiceText { get; set; }
-    public boolStatus? Completed { get; set; }
+    public BoolStatus? Completed { get; set; }
 }

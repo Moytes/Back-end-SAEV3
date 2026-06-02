@@ -6,7 +6,7 @@ public class StudentDataSheetItemDto
 {
     public Guid StudentId { get; set; }
     public string StudentFullName { get; set; } = null!;
-    public gender Gender { get; set; }
+    public Gender Gender { get; set; }
     public DateOnly BirthDate { get; set; }
     public string? CURP { get; set; }
 

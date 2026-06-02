@@ -11,7 +11,7 @@ public class AddStudentDisabilityRequest
     [Required]
     public Guid SchoolYearId { get; set; }
 
-    public boolStatus ExternalDiagnosis { get; set; } = boolStatus.False;
+    public BoolStatus ExternalDiagnosis { get; set; } = BoolStatus.False;
     public string? FileUrl { get; set; }
     public string? Notes { get; set; }
 }

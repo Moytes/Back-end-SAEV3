@@ -9,7 +9,7 @@ public class AddGroupRequest
     public Guid SchoolId { get; set; }
 
     [Required]
-    public grades Grade { get; set; }
+    public Grades Grade { get; set; }
 
     [Required]
     [MaxLength(50)]

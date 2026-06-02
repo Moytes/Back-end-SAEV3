@@ -24,5 +24,5 @@ public class UpdateUserRequest
     public Guid? StudentId { get; set; }
     public string? PhoneNumber { get; set; }
     public string? AvatarUrl { get; set; }
-    public boolStatus Status { get; set; }
+    public BoolStatus Status { get; set; }
 }

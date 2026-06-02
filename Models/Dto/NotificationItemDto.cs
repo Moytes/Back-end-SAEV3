@@ -9,7 +9,7 @@ public class NotificationItemDto
     public notificationType Type { get; set; }
     public string Title { get; set; } = null!;
     public string? Message { get; set; }
-    public boolStatus Read { get; set; }
+    public BoolStatus Read { get; set; }
     public string? DestinationUrl { get; set; }
     public DateTime CreatedAt { get; set; }
 }

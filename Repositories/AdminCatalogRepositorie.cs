@@ -28,7 +28,7 @@ public class AdminCatalogRepositorie : IAdminCatalogRepositorie
 
         if (onlyActive.HasValue)
         {
-            var status = onlyActive.Value ? boolStatus.True : boolStatus.False;
+            var status = onlyActive.Value ? BoolStatus.True : BoolStatus.False;
             query = query.Where(x => x.Status == status);
         }
 
@@ -41,7 +41,7 @@ public class AdminCatalogRepositorie : IAdminCatalogRepositorie
                 Name = x.Name,
                 StartDate = x.StartDate,
                 EndDate = x.EndDate,
-                IsActive = x.Status == boolStatus.True
+                IsActive = x.Status == BoolStatus.True
             })
             .ToListAsync();
     }
@@ -54,10 +54,10 @@ public class AdminCatalogRepositorie : IAdminCatalogRepositorie
 
         if (request.IsActive)
         {
-            var activeYears = await _context.SchoolYear.Where(x => x.Status == boolStatus.True).ToListAsync();
+            var activeYears = await _context.SchoolYear.Where(x => x.Status == BoolStatus.True).ToListAsync();
             foreach (var year in activeYears)
             {
-                year.Status = boolStatus.False;
+                year.Status = BoolStatus.False;
             }
         }
 
@@ -67,7 +67,7 @@ public class AdminCatalogRepositorie : IAdminCatalogRepositorie
             Name = request.Name,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
-            Status = request.IsActive ? boolStatus.True : boolStatus.False
+            Status = request.IsActive ? BoolStatus.True : BoolStatus.False
         };
 
         await _context.SchoolYear.AddAsync(schoolYear);
@@ -108,7 +108,7 @@ public class AdminCatalogRepositorie : IAdminCatalogRepositorie
                 Turn = (int)s.Turn,
                 TurnName = s.Turn.ToString().ToUpper(),
                 Address = s.Address,
-                IsActive = s.Status == boolStatus.True,
+                IsActive = s.Status == BoolStatus.True,
                 SchoolZoneId = s.SchoolZoneId,
                 SchoolZoneNumber = s.SchoolZone.Number,
                 SchoolZoneName = s.SchoolZone.Name
@@ -183,7 +183,7 @@ public class AdminCatalogRepositorie : IAdminCatalogRepositorie
             Turn = request.Turn,
             Address = request.Address,
             SchoolZoneId = request.SchoolZoneId,
-            Status = boolStatus.True,
+            Status = BoolStatus.True,
             CreatedAt = DateTime.UtcNow
         };
 

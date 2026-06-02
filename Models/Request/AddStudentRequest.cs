@@ -17,7 +17,7 @@ public class AddStudentRequest
     public string? MotherLastName { get; set; }
 
     [Required]
-    public gender Gender { get; set; }
+    public Gender Gender { get; set; }
 
     [Required]
     public DateOnly BirthDate { get; set; }

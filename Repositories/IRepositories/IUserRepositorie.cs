@@ -17,4 +17,5 @@ public interface IUserRepositorie
     Task<bool> EmailExists(string email, Guid? excludeUserId = null);
     Task<Result<Guid>> AssignUserToGroup(Guid userId, AssignUserGroupRequest request);
     Task<Result<Guid>> AssignUserToSchool(Guid userId, AssignUserSchoolRequest request);
+    Task<IEnumerable<Guid>> GetUserSchools(Guid userId);
 }

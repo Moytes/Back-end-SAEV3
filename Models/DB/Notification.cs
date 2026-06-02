@@ -14,7 +14,7 @@ public class Notification
     public string Title { get; set; } = null!;
     public string? Message { get; set; }
     public notificationType Type { get; set; } = notificationType.INFO;
-    public boolStatus Read { get; set; } = boolStatus.False;
+    public BoolStatus Read { get; set; } = BoolStatus.False;
     public string? DestinationUrl { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

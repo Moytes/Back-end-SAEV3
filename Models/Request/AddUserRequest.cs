@@ -31,6 +31,10 @@ public class AddUserRequest
 
     public Guid? SchoolZoneId { get; set; }
 
+    public Guid? SchoolId { get; set; }
+
+    public Guid? SchoolYearId { get; set; }
+
     public Guid? StudentId { get; set; }
 
     [Phone(ErrorMessage = "Invalid phone number format")]

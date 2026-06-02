@@ -102,7 +102,7 @@ public class TEARepositorie : ITEARepositorie
             GeneralObservations = request.GeneralObservations,
             TotalScore = 0,
             AlertLevel = alertLevel.SIN_ALERTA,
-            RequiresCanalization = request.RequiresCanalization == true ? boolStatus.True : boolStatus.False,
+            RequiresCanalization = request.RequiresCanalization == true ? BoolStatus.True : BoolStatus.False,
             CreatedAt = DateTime.UtcNow
         };
 

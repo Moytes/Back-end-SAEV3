@@ -5,7 +5,7 @@ public class PsychoCollaborator
     public Guid Id { get; set; }
     public string? ExternalName { get; set; }
     public string? CollaboratorRole { get; set; }
-    public boolStatus DigitalSignature { get; set; } = boolStatus.False;
+    public BoolStatus DigitalSignature { get; set; } = BoolStatus.False;
     public DateTime? SignatureDate { get; set; }
 
     // Psychoeducational Assessment

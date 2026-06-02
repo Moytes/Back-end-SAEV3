@@ -41,7 +41,7 @@ public class User
     public string? MotherLastName { get; set; }
     public UserRole Role { get; set; }
     public string? PhoneNumber { get; set; }
-    public boolStatus Status { get; set; } = boolStatus.True;
+    public BoolStatus Status { get; set; } = BoolStatus.True;
     public string? AvatarUrl { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
