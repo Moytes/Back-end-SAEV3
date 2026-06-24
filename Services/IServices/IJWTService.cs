@@ -1,6 +1,6 @@
-﻿namespace Services.IServices;
+namespace Services.IServices;
 
 public interface IJWTService
 {
-    Task<string> GenerateToken(Guid userId, string permissions, Guid? studentId = null);
+    Task<string> GenerateToken(Guid userId, string roleClave, IEnumerable<System.Security.Claims.Claim>? additionalClaims = null);
 }

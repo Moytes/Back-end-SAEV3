@@ -1,19 +1,16 @@
-﻿namespace Models.DB;
+namespace Models.DB;
 
 public class UserGroups
 {
-    public Guid Id { get; set; }
-    public BoolStatus EsTitular { get; set; } = BoolStatus.False;
+    public int Id { get; set; }
+    public bool EsTitular { get; set; }
 
-    // User
-    public User User { get; set; } = null!;
     public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
 
-    // Group
+    public int GroupId { get; set; }
     public Group Group { get; set; } = null!;
-    public Guid GroupId { get; set; }
 
-    // School year
+    public int SchoolYearId { get; set; }
     public SchoolYear SchoolYear { get; set; } = null!;
-    public Guid SchoolYearId { get; set; }
 }

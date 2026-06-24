@@ -4,15 +4,15 @@ namespace Models.Request;
 
 public class AddSchoolYearRequest
 {
-    [Required(ErrorMessage = "El nombre del ciclo es obligatorio")]
-    [StringLength(100)]
+    [Required]
+    [MaxLength(20)]
     public string Name { get; set; } = null!;
 
-    [Required(ErrorMessage = "La fecha de inicio es obligatoria")]
+    [Required]
     public DateOnly StartDate { get; set; }
 
-    [Required(ErrorMessage = "La fecha de fin es obligatoria")]
+    [Required]
     public DateOnly EndDate { get; set; }
 
-    public bool IsActive { get; set; } = true;
+    public bool Activo { get; set; } = true;
 }

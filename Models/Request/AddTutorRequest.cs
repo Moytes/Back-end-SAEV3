@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Models.Request;
 
@@ -8,14 +8,18 @@ public class AddTutorRequest
     [MaxLength(200)]
     public string CompleteName { get; set; } = null!;
 
-    [MaxLength(100)]
-    public string? Parent { get; set; }
+    [MaxLength(50)]
+    public string? Parentesco { get; set; }
 
     [Phone]
-    public string? PhoneNumber { get; set; }
+    [MaxLength(20)]
+    public string? Phone { get; set; }
 
     [EmailAddress]
+    [MaxLength(200)]
     public string? Email { get; set; }
 
     public string? Address { get; set; }
+
+    public Guid? UserId { get; set; }
 }

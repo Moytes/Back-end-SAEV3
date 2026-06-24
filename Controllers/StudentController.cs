@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Models.DB;
 using Models.Request;
 using Repositories.IRepositories;
-using Services.IServices;
 using Utilities.Errors;
 
 namespace Controllers;
@@ -13,22 +11,14 @@ namespace Controllers;
 [Produces("application/json")]
 [Authorize]
 public class StudentController(
-    IStudentRepositorie studentRepositorie,
-    IServiceRepositorie serviceRepositorie) : ControllerBase
+    IStudentRepositorie studentRepositorie) : ControllerBase
 {
     private readonly IStudentRepositorie _studentRepositorie = studentRepositorie;
-    private readonly IServiceRepositorie _serviceRepositorie = serviceRepositorie;
-
-    private Guid? GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
-    }
 
     [HttpGet("alumnos")]
     public async Task<IActionResult> GetStudents(
         [FromQuery] string? search = null,
-        [FromQuery] Guid? schoolId = null)
+        [FromQuery] int? schoolId = null)
     {
         var result = await _studentRepositorie.GetStudents(search, schoolId);
         return Ok(result);
@@ -50,15 +40,6 @@ public class StudentController(
 
             return BadRequest(result.error.Message);
         }
-
-        await _serviceRepositorie.AddLog(new AuditLog
-        {
-            UserId = GetCurrentUserId(),
-            Action = "CREATE",
-            AffectedTable = "student",
-            RecordId = result.Value!.ToString(),
-            Request = System.Text.Json.JsonSerializer.Serialize(request)
-        });
 
         return StatusCode(201, result.Value);
     }
@@ -94,15 +75,6 @@ public class StudentController(
             return BadRequest(result.error.Message);
         }
 
-        await _serviceRepositorie.AddLog(new AuditLog
-        {
-            UserId = GetCurrentUserId(),
-            Action = "UPDATE",
-            AffectedTable = "student",
-            RecordId = id.ToString(),
-            Request = System.Text.Json.JsonSerializer.Serialize(request)
-        });
-
         return Ok(new { id });
     }
 
@@ -134,23 +106,6 @@ public class StudentController(
             return BadRequest(result.error.Message);
         }
 
-        await _serviceRepositorie.AddLog(new AuditLog
-        {
-            UserId = GetCurrentUserId(),
-            Action = "CREATE",
-            AffectedTable = "tutor",
-            RecordId = result.Value!.ToString(),
-            Request = System.Text.Json.JsonSerializer.Serialize(new
-            {
-                StudentId = id,
-                request.CompleteName,
-                request.Parent,
-                request.PhoneNumber,
-                request.Email,
-                request.Address
-            })
-        });
-
         return StatusCode(201, result.Value);
     }
 
@@ -175,15 +130,6 @@ public class StudentController(
 
             return BadRequest(result.error.Message);
         }
-
-        await _serviceRepositorie.AddLog(new AuditLog
-        {
-            UserId = GetCurrentUserId(),
-            Action = "CREATE",
-            AffectedTable = "registration",
-            RecordId = result.Value!.ToString(),
-            Request = System.Text.Json.JsonSerializer.Serialize(request)
-        });
 
         return StatusCode(201, result.Value);
     }

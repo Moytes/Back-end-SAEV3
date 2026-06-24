@@ -53,9 +53,12 @@ PublishScripts/
 *.nuget.targets
 
 # Archivos de configuración sensibles
-appsettings.json
-appsettings.Development.json
-appsettings.*.json
+# NOTA: Comentados para que Docker Desktop incluya la configuración. 
+# Si usas variables de entorno en prod, puedes volver a ignorarlos.
+# appsettings.json
+# appsettings.Development.json
+# appsettings.*.json
+
 
 # Documentación y archivos varios
 README.md

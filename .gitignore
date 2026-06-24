@@ -211,4 +211,6 @@ FakesAssemblies/
 
 appsettings.json
 appsettings.Development.json
+appp.json
+.keys/
 .fake

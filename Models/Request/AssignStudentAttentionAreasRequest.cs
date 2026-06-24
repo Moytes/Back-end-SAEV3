@@ -1,11 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Models.Request;
 
 public class AssignStudentAttentionAreasRequest
 {
     [Required]
-    public Guid SchoolYearId { get; set; }
+    public int SchoolYearId { get; set; }
 
     [Required]
     [MinLength(1)]

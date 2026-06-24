@@ -26,17 +26,15 @@ RUN dotnet publish "SIAE-V2.csproj" -c Release -o /app/publish /p:UseAppHost=fal
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-# 1. Quita el EXPOSE 8080 o déjalo solo como comentario, 
-# Railway ignorará este número y usará el que necesite.
-# EXPOSE 8080 
+# 1. Exponer puerto estándar de .NET 8+
+EXPOSE 8080 
 
 # 2. Copia los archivos
 COPY --from=publish /app/publish .
 
-# 3. Elimina la variable fija ASPNETCORE_URLS del Dockerfile
-# para que no choque con la de Railway.
+# 3. Establecer el entorno local y puerto
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://+:8080
 
-# 4. CAMBIO CRUCIAL: Usa el "Shell form" para que reconozca la variable $PORT
-# Esto sobreescribe cualquier configuración previa y escucha en el puerto correcto.
-ENTRYPOINT ["sh", "-c", "dotnet SIAE-V2.dll --urls http://0.0.0.0:${PORT}"]
+# 4. Entrypoint estándar y directo para contenedores .NET
+ENTRYPOINT ["dotnet", "SIAE-V2.dll"]

@@ -1,10 +1,4 @@
-﻿namespace Models.DB;
-
-public enum Gender
-{
-    M = 1, // Male (Masculino)
-    F = 2  // Female (Femenino)
-}
+namespace Models.DB;
 
 public class Student
 {
@@ -12,11 +6,14 @@ public class Student
     public string Name { get; set; } = null!;
     public string FatherLastName { get; set; } = null!;
     public string? MotherLastName { get; set; }
-    public Gender Gender { get; set; }
+    public Sexo Sexo { get; set; }
     public DateOnly BirthDate { get; set; }
     public string? CURP { get; set; }
     public string? PhotoUrl { get; set; }
-    public BoolStatus Status { get; set; } = BoolStatus.True;
+    public bool Activo { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    public Guid? UserId { get; set; }
+    public User? User { get; set; }
 }

@@ -22,132 +22,69 @@ namespace SIAEV2.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Models.DB.Assignment", b =>
+            modelBuilder.Entity("Models.DB.AcademySubscription", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    b.Property<int>("Active")
-                        .HasColumnType("integer")
-                        .HasColumnName("active");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid>("AssignedById")
-                        .HasColumnType("uuid")
-                        .HasColumnName("assigned_by_id");
-
-                    b.Property<DateTime>("AssignmentDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("assignment_date");
+                        .HasColumnName("created_at");
 
-                    b.Property<DateOnly?>("DueDate")
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer")
+                        .HasColumnName("estado");
+
+                    b.Property<DateOnly?>("FechaFin")
                         .HasColumnType("date")
-                        .HasColumnName("due_date");
+                        .HasColumnName("fecha_fin");
 
-                    b.Property<string>("Instructions")
+                    b.Property<DateOnly>("FechaInicio")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_inicio");
+
+                    b.Property<string>("NombreCuenta")
+                        .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("instructions");
+                        .HasColumnName("nombre_cuenta");
 
-                    b.Property<Guid>("MaterialId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("material_id");
-
-                    b.Property<Guid>("SchoolYearId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("school_year_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_assignment");
-
-                    b.HasIndex("AssignedById")
-                        .HasDatabaseName("ix_assignment_assigned_by_id");
-
-                    b.HasIndex("MaterialId")
-                        .HasDatabaseName("ix_assignment_material_id");
-
-                    b.HasIndex("SchoolYearId")
-                        .HasDatabaseName("ix_assignment_school_year_id");
-
-                    b.ToTable("assignment", (string)null);
-                });
-
-            modelBuilder.Entity("Models.DB.AssignmentStudent", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("AssignmentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("assignment_id");
-
-                    b.Property<string>("AutoEvaluationJson")
-                        .HasColumnType("text")
-                        .HasColumnName("auto_evaluation_json");
-
-                    b.Property<DateTime?>("CompletedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("completed_date");
-
-                    b.Property<Guid?>("EvaluatedById")
-                        .HasColumnType("uuid")
-                        .HasColumnName("evaluated_by_id");
-
-                    b.Property<DateTime?>("EvaluationDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("evaluation_date");
-
-                    b.PrimitiveCollection<string[]>("EvidenceUrls")
-                        .HasColumnType("text[]")
-                        .HasColumnName("evidence_urls");
-
-                    b.Property<string>("Feedback")
-                        .HasColumnType("text")
-                        .HasColumnName("feedback");
-
-                    b.Property<string>("ManualGradeJson")
-                        .HasColumnType("text")
-                        .HasColumnName("manual_grade_json");
-
-                    b.Property<string>("ResponseJson")
-                        .HasColumnType("text")
-                        .HasColumnName("response_json");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("start_date");
-
-                    b.Property<int>("Status")
+                    b.Property<int>("Periodo")
                         .HasColumnType("integer")
-                        .HasColumnName("status");
+                        .HasColumnName("periodo");
 
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("student_id");
+                    b.Property<int>("PlanId")
+                        .HasColumnType("integer")
+                        .HasColumnName("plan_id");
+
+                    b.Property<string>("ReferenciaPago")
+                        .HasColumnType("text")
+                        .HasColumnName("referencia_pago");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id")
-                        .HasName("pk_assignment_student");
+                        .HasName("pk_academy_subscription");
 
-                    b.HasIndex("AssignmentId")
-                        .HasDatabaseName("ix_assignment_student_assignment_id");
+                    b.HasIndex("PlanId")
+                        .HasDatabaseName("ix_academy_subscription_plan_id");
 
-                    b.HasIndex("EvaluatedById")
-                        .HasDatabaseName("ix_assignment_student_evaluated_by_id");
-
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_assignment_student_student_id");
-
-                    b.ToTable("assignment_student", (string)null);
+                    b.ToTable("academy_subscription", (string)null);
                 });
 
             modelBuilder.Entity("Models.DB.AttentionArea", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CVE")
                         .IsRequired()
@@ -167,25 +104,25 @@ namespace SIAEV2.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("10000000-0000-0000-0000-000000000001"),
+                            Id = 1,
                             CVE = "APRENDIZAJE",
                             Name = "Aprendizaje"
                         },
                         new
                         {
-                            Id = new Guid("10000000-0000-0000-0000-000000000002"),
+                            Id = 2,
                             CVE = "PSICOLOGIA",
                             Name = "Psicología"
                         },
                         new
                         {
-                            Id = new Guid("10000000-0000-0000-0000-000000000003"),
+                            Id = 3,
                             CVE = "COMUNICACION",
                             Name = "Comunicación"
                         },
                         new
                         {
-                            Id = new Guid("10000000-0000-0000-0000-000000000004"),
+                            Id = 4,
                             CVE = "TRABAJO_SOCIAL",
                             Name = "Trabajo Social"
                         });
@@ -193,17 +130,19 @@ namespace SIAEV2.Migrations
 
             modelBuilder.Entity("Models.DB.AttentionMode", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Phase")
                         .HasColumnType("integer")
                         .HasColumnName("phase");
 
-                    b.Property<Guid>("SchoolYearId")
-                        .HasColumnType("uuid")
+                    b.Property<int>("SchoolYearId")
+                        .HasColumnType("integer")
                         .HasColumnName("school_year_id");
 
                     b.Property<Guid>("StudentId")
@@ -220,822 +159,34 @@ namespace SIAEV2.Migrations
                     b.HasIndex("SchoolYearId")
                         .HasDatabaseName("ix_attention_mode_school_year_id");
 
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_attention_mode_student_id");
+                    b.HasIndex("StudentId", "SchoolYearId", "Phase", "Type")
+                        .IsUnique()
+                        .HasDatabaseName("ix_attention_mode_student_id_school_year_id_phase_type");
 
                     b.ToTable("attention_mode", (string)null);
                 });
 
-            modelBuilder.Entity("Models.DB.AuditLog", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("action");
-
-                    b.Property<string>("AffectedTable")
-                        .HasColumnType("text")
-                        .HasColumnName("affected_table");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("RecordId")
-                        .HasColumnType("text")
-                        .HasColumnName("record_id");
-
-                    b.Property<string>("Request")
-                        .HasColumnType("text")
-                        .HasColumnName("request");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_audit_log");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_audit_log_user_id");
-
-                    b.ToTable("audit_log", (string)null);
-                });
-
-            modelBuilder.Entity("Models.DB.CIEAnswer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<bool?>("Achieved")
-                        .HasColumnType("boolean")
-                        .HasColumnName("achieved");
-
-                    b.Property<Guid>("EvaluationId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("evaluation_id");
-
-                    b.Property<string>("EvidenceUrl")
-                        .HasColumnType("text")
-                        .HasColumnName("evidence_url");
-
-                    b.Property<short?>("HelpLevel")
-                        .HasColumnType("smallint")
-                        .HasColumnName("help_level");
-
-                    b.Property<string>("Observation")
-                        .HasColumnType("text")
-                        .HasColumnName("observation");
-
-                    b.Property<int?>("ResponseType")
-                        .HasColumnType("integer")
-                        .HasColumnName("response_type");
-
-                    b.Property<Guid>("SubIndicatorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("sub_indicator_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_cie_answer");
-
-                    b.HasIndex("EvaluationId")
-                        .HasDatabaseName("ix_cie_answer_evaluation_id");
-
-                    b.HasIndex("SubIndicatorId")
-                        .HasDatabaseName("ix_cie_answer_sub_indicator_id");
-
-                    b.ToTable("cie_answer", (string)null);
-                });
-
-            modelBuilder.Entity("Models.DB.CIEDimension", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("CVE")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("cve");
-
-                    b.Property<string>("ColorHex")
-                        .HasColumnType("text")
-                        .HasColumnName("color_hex");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.Property<short>("Order")
-                        .HasColumnType("smallint")
-                        .HasColumnName("order");
-
-                    b.HasKey("Id")
-                        .HasName("pk_cie_dimension");
-
-                    b.ToTable("cie_dimension", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000001"),
-                            CVE = "FONOLOGIA",
-                            ColorHex = "#FF6B6B",
-                            Name = "Fonología",
-                            Order = (short)1
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000002"),
-                            CVE = "SEMANTICA",
-                            ColorHex = "#4ECDC4",
-                            Name = "Semántica (Contenido)",
-                            Order = (short)2
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000003"),
-                            CVE = "PRAGMATICA",
-                            ColorHex = "#45B7D1",
-                            Name = "Pragmática (Uso)",
-                            Order = (short)3
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000004"),
-                            CVE = "MORFOSINTAXIS",
-                            ColorHex = "#96CEB4",
-                            Name = "Morfosintaxis (Forma)",
-                            Order = (short)4
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000005"),
-                            CVE = "DISCURSO_ORAL",
-                            ColorHex = "#FFEAA7",
-                            Name = "Discursos Orales",
-                            Order = (short)5
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000006"),
-                            CVE = "JUEGO",
-                            ColorHex = "#DDA0DD",
-                            Name = "Juego",
-                            Order = (short)6
-                        });
-                });
-
-            modelBuilder.Entity("Models.DB.CIEEvaluation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("DimensionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("dimension_id");
-
-                    b.Property<DateOnly>("EvaluationDate")
-                        .HasColumnType("date")
-                        .HasColumnName("evaluation_date");
-
-                    b.Property<Guid>("EvaluatorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("evaluator_id");
-
-                    b.Property<string>("Observations")
-                        .HasColumnType("text")
-                        .HasColumnName("observations");
-
-                    b.Property<Guid>("SchoolYearId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("school_year_id");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
-                        .HasColumnName("status");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("student_id");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id")
-                        .HasName("pk_cie_evaluation");
-
-                    b.HasIndex("DimensionId")
-                        .HasDatabaseName("ix_cie_evaluation_dimension_id");
-
-                    b.HasIndex("EvaluatorId")
-                        .HasDatabaseName("ix_cie_evaluation_evaluator_id");
-
-                    b.HasIndex("SchoolYearId")
-                        .HasDatabaseName("ix_cie_evaluation_school_year_id");
-
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_cie_evaluation_student_id");
-
-                    b.ToTable("cie_evaluation", (string)null);
-                });
-
-            modelBuilder.Entity("Models.DB.CIEIndicator", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Code")
-                        .HasColumnType("text")
-                        .HasColumnName("code");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<Guid>("DimensionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("dimension_id");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.Property<short>("Order")
-                        .HasColumnType("smallint")
-                        .HasColumnName("order");
-
-                    b.HasKey("Id")
-                        .HasName("pk_cie_indicator");
-
-                    b.HasIndex("DimensionId")
-                        .HasDatabaseName("ix_cie_indicator_dimension_id");
-
-                    b.ToTable("cie_indicator", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("31000000-0000-0000-0000-000000000001"),
-                            Code = "FON_VOC",
-                            DimensionId = new Guid("30000000-0000-0000-0000-000000000001"),
-                            Name = "Realiza vocalizaciones",
-                            Order = (short)1
-                        },
-                        new
-                        {
-                            Id = new Guid("31000000-0000-0000-0000-000000000002"),
-                            Code = "FON_PAL",
-                            DimensionId = new Guid("30000000-0000-0000-0000-000000000001"),
-                            Name = "Produce palabras con:",
-                            Order = (short)2
-                        },
-                        new
-                        {
-                            Id = new Guid("31000000-0000-0000-0000-000000000003"),
-                            Code = "FON_PTO",
-                            DimensionId = new Guid("30000000-0000-0000-0000-000000000001"),
-                            Name = "Punto de articulación",
-                            Order = (short)3
-                        },
-                        new
-                        {
-                            Id = new Guid("31000000-0000-0000-0000-000000000004"),
-                            Code = "FON_SIT",
-                            DimensionId = new Guid("30000000-0000-0000-0000-000000000001"),
-                            Name = "Situación fonológica",
-                            Order = (short)4
-                        },
-                        new
-                        {
-                            Id = new Guid("31000000-0000-0000-0000-000000000005"),
-                            Code = "FON_APA",
-                            DimensionId = new Guid("30000000-0000-0000-0000-000000000001"),
-                            Name = "Aparato fonoarticulador",
-                            Order = (short)5
-                        });
-                });
-
-            modelBuilder.Entity("Models.DB.CIEPhonologyAnswer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("EvaluationId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("evaluation_id");
-
-                    b.Property<bool?>("Functional")
-                        .HasColumnType("boolean")
-                        .HasColumnName("functional");
-
-                    b.Property<string>("ObservationForm")
-                        .HasColumnType("text")
-                        .HasColumnName("observation_form");
-
-                    b.Property<Guid>("SubIndicatorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("sub_indicator_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_cie_phonology_answer");
-
-                    b.HasIndex("EvaluationId")
-                        .HasDatabaseName("ix_cie_phonology_answer_evaluation_id");
-
-                    b.HasIndex("SubIndicatorId")
-                        .HasDatabaseName("ix_cie_phonology_answer_sub_indicator_id");
-
-                    b.ToTable("cie_phonology_answer", (string)null);
-                });
-
-            modelBuilder.Entity("Models.DB.CIESubIndicator", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Code")
-                        .HasColumnType("text")
-                        .HasColumnName("code");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<Guid>("IndicatorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("indicator_id");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.Property<short>("Order")
-                        .HasColumnType("smallint")
-                        .HasColumnName("order");
-
-                    b.HasKey("Id")
-                        .HasName("pk_cie_sub_indicator");
-
-                    b.HasIndex("IndicatorId")
-                        .HasDatabaseName("ix_cie_sub_indicator_indicator_id");
-
-                    b.ToTable("cie_sub_indicator", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000001"),
-                            Code = "FON_VOC_A",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000001"),
-                            Name = "Con intención comunicativa",
-                            Order = (short)1
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000002"),
-                            Code = "FON_PAL_A",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000002"),
-                            Name = "Una sílaba",
-                            Order = (short)1
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000003"),
-                            Code = "FON_PAL_B",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000002"),
-                            Name = "Dos sílabas",
-                            Order = (short)2
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000004"),
-                            Code = "FON_PAL_C",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000002"),
-                            Name = "Heterosilábicas",
-                            Order = (short)3
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000005"),
-                            Code = "FON_PAL_D",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000002"),
-                            Name = "Homosilábicas: /r/: tr, br, kr, gr; /l/: bl, pl, kl, fl",
-                            Order = (short)4
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000006"),
-                            Code = "FON_PAL_E",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000002"),
-                            Name = "Combinaciones: /mbr/, /str/",
-                            Order = (short)5
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000007"),
-                            Code = "FON_PAL_F",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000002"),
-                            Name = "Diptongos",
-                            Order = (short)6
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000008"),
-                            Code = "FON_PTO_A",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000003"),
-                            Name = "Vocales (SI al producir 3/5 o más)",
-                            Order = (short)1
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000009"),
-                            Code = "FON_PTO_B",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000003"),
-                            Name = "Velares /k/, /g/, /j/",
-                            Order = (short)2
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-00000000000a"),
-                            Code = "FON_PTO_C",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000003"),
-                            Name = "Bilabiales /p/, /b/, /m/",
-                            Order = (short)3
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-00000000000b"),
-                            Code = "FON_PTO_D",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000003"),
-                            Name = "Alveolares /s/, /l/, /r/, /n/",
-                            Order = (short)4
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-00000000000c"),
-                            Code = "FON_PTO_E",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000003"),
-                            Name = "Palatales /ch/, /ll/, /ñ/",
-                            Order = (short)5
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-00000000000d"),
-                            Code = "FON_PTO_F",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000003"),
-                            Name = "Dentales /d/, /t/",
-                            Order = (short)6
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-00000000000e"),
-                            Code = "FON_PTO_G",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000003"),
-                            Name = "Labiodentales /f/",
-                            Order = (short)7
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-00000000000f"),
-                            Code = "FON_PTO_H",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000003"),
-                            Name = "Laterales /l/",
-                            Order = (short)8
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000010"),
-                            Code = "FON_PTO_I",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000003"),
-                            Name = "Vibrantes /r/, /ṝ/",
-                            Order = (short)9
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000011"),
-                            Code = "FON_SIT_A",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000004"),
-                            Name = "Habla sin omisiones",
-                            Order = (short)1
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000012"),
-                            Code = "FON_SIT_B",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000004"),
-                            Name = "Habla sin adiciones",
-                            Order = (short)2
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000013"),
-                            Code = "FON_SIT_C",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000004"),
-                            Name = "Habla sin sustituciones",
-                            Order = (short)3
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000014"),
-                            Code = "FON_SIT_D",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000004"),
-                            Name = "Habla sin distorsiones",
-                            Order = (short)4
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000015"),
-                            Code = "FON_SIT_E",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000004"),
-                            Name = "Habla sin alteraciones globales",
-                            Order = (short)5
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000016"),
-                            Code = "FON_SIT_F",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000004"),
-                            Name = "Habla sin reducción silábica",
-                            Order = (short)6
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000017"),
-                            Code = "FON_APA_LENGUA",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000005"),
-                            Name = "Lengua",
-                            Order = (short)1
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000018"),
-                            Code = "FON_APA_FRENILLO",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000005"),
-                            Name = "Frenillo lingual",
-                            Order = (short)2
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-000000000019"),
-                            Code = "FON_APA_LABIOS",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000005"),
-                            Name = "Labios",
-                            Order = (short)3
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-00000000001a"),
-                            Code = "FON_APA_MANDIBULA",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000005"),
-                            Name = "Mandíbula",
-                            Order = (short)4
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-00000000001b"),
-                            Code = "FON_APA_MEJILLAS",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000005"),
-                            Name = "Mejillas",
-                            Order = (short)5
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-00000000001c"),
-                            Code = "FON_APA_DIENTES",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000005"),
-                            Name = "Dientes",
-                            Order = (short)6
-                        },
-                        new
-                        {
-                            Id = new Guid("32000000-0000-0000-0000-00000000001d"),
-                            Code = "FON_APA_PALADAR",
-                            IndicatorId = new Guid("31000000-0000-0000-0000-000000000005"),
-                            Name = "Paladar duro y velo",
-                            Order = (short)7
-                        });
-                });
-
-            modelBuilder.Entity("Models.DB.Canalization", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("AttentionAreaId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("attention_area_id");
-
-                    b.Property<DateOnly>("CanalizationDate")
-                        .HasColumnType("date")
-                        .HasColumnName("canalization_date");
-
-                    b.Property<string>("ClassroomActions")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("classroom_actions");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("reason");
-
-                    b.Property<DateOnly?>("ReceivedDate")
-                        .HasColumnType("date")
-                        .HasColumnName("received_date");
-
-                    b.Property<Guid>("ReceiverId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("receiver_id");
-
-                    b.Property<Guid>("RequesterId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("requester_id");
-
-                    b.Property<Guid>("SchoolYearId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("school_year_id");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
-                        .HasColumnName("status");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("student_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_canalization");
-
-                    b.HasIndex("AttentionAreaId")
-                        .HasDatabaseName("ix_canalization_attention_area_id");
-
-                    b.HasIndex("ReceiverId")
-                        .HasDatabaseName("ix_canalization_receiver_id");
-
-                    b.HasIndex("RequesterId")
-                        .HasDatabaseName("ix_canalization_requester_id");
-
-                    b.HasIndex("SchoolYearId")
-                        .HasDatabaseName("ix_canalization_school_year_id");
-
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_canalization_student_id");
-
-                    b.ToTable("canalization", (string)null);
-                });
-
-            modelBuilder.Entity("Models.DB.Dialog", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("CharacterJson")
-                        .HasColumnType("text")
-                        .HasColumnName("character_json");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<short?>("EstimatedDurationMin")
-                        .HasColumnType("smallint")
-                        .HasColumnName("estimated_duration_min");
-
-                    b.Property<Guid>("MaterialId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("material_id");
-
-                    b.Property<string>("ScenesJson")
-                        .HasColumnType("text")
-                        .HasColumnName("scenes_json");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("title");
-
-                    b.HasKey("Id")
-                        .HasName("pk_dialog");
-
-                    b.HasIndex("MaterialId")
-                        .HasDatabaseName("ix_dialog_material_id");
-
-                    b.ToTable("dialog", (string)null);
-                });
-
-            modelBuilder.Entity("Models.DB.DialogProgress", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<int>("Completed")
-                        .HasColumnType("integer")
-                        .HasColumnName("completed");
-
-                    b.Property<short>("CurrentScene")
-                        .HasColumnType("smallint")
-                        .HasColumnName("current_scene");
-
-                    b.Property<Guid>("DialogId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("dialog_id");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("end_date");
-
-                    b.Property<string>("ResponsesJson")
-                        .HasColumnType("text")
-                        .HasColumnName("responses_json");
-
-                    b.Property<decimal?>("Score")
-                        .HasColumnType("numeric")
-                        .HasColumnName("score");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("start_date");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("student_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_dialog_progress");
-
-                    b.HasIndex("DialogId")
-                        .HasDatabaseName("ix_dialog_progress_dialog_id");
-
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_dialog_progress_student_id");
-
-                    b.ToTable("dialog_progress", (string)null);
-                });
-
             modelBuilder.Entity("Models.DB.Disability", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CVE")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("cve");
 
+                    b.Property<int>("Category")
+                        .HasColumnType("integer")
+                        .HasColumnName("category");
+
                     b.Property<string>("Description")
                         .HasColumnType("text")
                         .HasColumnName("description");
-
-                    b.Property<int>("DisabilityCategory")
-                        .HasColumnType("integer")
-                        .HasColumnName("disability_category");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1043,128 +194,365 @@ namespace SIAEV2.Migrations
                         .HasColumnName("name");
 
                     b.HasKey("Id")
-                        .HasName("pk_disabilitie");
+                        .HasName("pk_disability");
 
-                    b.ToTable("disabilitie", (string)null);
+                    b.ToTable("disability", (string)null);
 
                     b.HasData(
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000001"),
+                            Id = 1,
                             CVE = "INTELECTUAL",
-                            DisabilityCategory = 1,
+                            Category = 1,
                             Name = "Discapacidad Intelectual"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Id = 2,
                             CVE = "MOTRIZ",
-                            DisabilityCategory = 1,
+                            Category = 1,
                             Name = "Discapacidad Motriz"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000003"),
+                            Id = 3,
                             CVE = "SORDERA",
-                            DisabilityCategory = 1,
+                            Category = 1,
                             Name = "Sordera"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000004"),
+                            Id = 4,
                             CVE = "HIPOACUSIA",
-                            DisabilityCategory = 1,
+                            Category = 1,
                             Name = "Hipoacusia"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000005"),
+                            Id = 5,
                             CVE = "CEGUERA",
-                            DisabilityCategory = 1,
+                            Category = 1,
                             Name = "Ceguera"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000006"),
+                            Id = 6,
                             CVE = "BAJA_VISION",
-                            DisabilityCategory = 1,
+                            Category = 1,
                             Name = "Baja Visión"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000007"),
+                            Id = 7,
                             CVE = "MULTIPLE",
-                            DisabilityCategory = 1,
+                            Category = 1,
                             Name = "Discapacidad Múltiple"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000008"),
+                            Id = 8,
                             CVE = "SORDOCEGUERA",
-                            DisabilityCategory = 1,
+                            Category = 1,
                             Name = "Sordoceguera"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000009"),
+                            Id = 9,
                             CVE = "TEA",
-                            DisabilityCategory = 1,
+                            Category = 1,
                             Name = "Trastorno del Espectro Autista"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-00000000000a"),
+                            Id = 10,
                             CVE = "TDAH",
-                            DisabilityCategory = 2,
+                            Category = 2,
                             Name = "TDAH"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-00000000000b"),
+                            Id = 11,
                             CVE = "APRENDIZAJE",
-                            DisabilityCategory = 2,
+                            Category = 2,
                             Name = "Barreras de Aprendizaje"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-00000000000c"),
+                            Id = 12,
                             CVE = "COMUNICACION",
-                            DisabilityCategory = 2,
+                            Category = 2,
                             Name = "Barreras de Comunicación"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-00000000000d"),
+                            Id = 13,
                             CVE = "CONDUCTA",
-                            DisabilityCategory = 2,
+                            Category = 2,
                             Name = "Barreras de Conducta"
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-00000000000e"),
+                            Id = 14,
                             CVE = "AS",
-                            DisabilityCategory = 3,
+                            Category = 3,
                             Name = "Aptitudes Sobresalientes"
+                        });
+                });
+
+            modelBuilder.Entity("Models.DB.EducationLevel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
+
+                    b.Property<string>("Clave")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("clave");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nombre");
+
+                    b.Property<short>("Orden")
+                        .HasColumnType("smallint")
+                        .HasColumnName("orden");
+
+                    b.HasKey("Id")
+                        .HasName("pk_education_level");
+
+                    b.HasIndex("Clave")
+                        .IsUnique()
+                        .HasDatabaseName("ix_education_level_clave");
+
+                    b.HasIndex("Orden")
+                        .IsUnique()
+                        .HasDatabaseName("ix_education_level_orden");
+
+                    b.ToTable("education_level", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Activo = true,
+                            Clave = "PREESCOLAR",
+                            Nombre = "Preescolar",
+                            Orden = (short)1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Activo = true,
+                            Clave = "PRIMARIA",
+                            Nombre = "Primaria",
+                            Orden = (short)2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Activo = true,
+                            Clave = "SECUNDARIA",
+                            Nombre = "Secundaria",
+                            Orden = (short)3
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Activo = true,
+                            Clave = "PREPARATORIA",
+                            Nombre = "Preparatoria",
+                            Orden = (short)4
+                        });
+                });
+
+            modelBuilder.Entity("Models.DB.Grade", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EducationLevelId")
+                        .HasColumnType("integer")
+                        .HasColumnName("education_level_id");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nombre");
+
+                    b.Property<short>("Numero")
+                        .HasColumnType("smallint")
+                        .HasColumnName("numero");
+
+                    b.HasKey("Id")
+                        .HasName("pk_grade");
+
+                    b.HasIndex("EducationLevelId", "Numero")
+                        .IsUnique()
+                        .HasDatabaseName("ix_grade_education_level_id_numero");
+
+                    b.ToTable("grade", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            EducationLevelId = 1,
+                            Nombre = "Primero",
+                            Numero = (short)1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            EducationLevelId = 1,
+                            Nombre = "Segundo",
+                            Numero = (short)2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            EducationLevelId = 1,
+                            Nombre = "Tercero",
+                            Numero = (short)3
+                        },
+                        new
+                        {
+                            Id = 4,
+                            EducationLevelId = 2,
+                            Nombre = "Primero",
+                            Numero = (short)1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            EducationLevelId = 2,
+                            Nombre = "Segundo",
+                            Numero = (short)2
+                        },
+                        new
+                        {
+                            Id = 6,
+                            EducationLevelId = 2,
+                            Nombre = "Tercero",
+                            Numero = (short)3
+                        },
+                        new
+                        {
+                            Id = 7,
+                            EducationLevelId = 2,
+                            Nombre = "Cuarto",
+                            Numero = (short)4
+                        },
+                        new
+                        {
+                            Id = 8,
+                            EducationLevelId = 2,
+                            Nombre = "Quinto",
+                            Numero = (short)5
+                        },
+                        new
+                        {
+                            Id = 9,
+                            EducationLevelId = 2,
+                            Nombre = "Sexto",
+                            Numero = (short)6
+                        },
+                        new
+                        {
+                            Id = 10,
+                            EducationLevelId = 3,
+                            Nombre = "Primero",
+                            Numero = (short)1
+                        },
+                        new
+                        {
+                            Id = 11,
+                            EducationLevelId = 3,
+                            Nombre = "Segundo",
+                            Numero = (short)2
+                        },
+                        new
+                        {
+                            Id = 12,
+                            EducationLevelId = 3,
+                            Nombre = "Tercero",
+                            Numero = (short)3
+                        },
+                        new
+                        {
+                            Id = 13,
+                            EducationLevelId = 4,
+                            Nombre = "Primer semestre",
+                            Numero = (short)1
+                        },
+                        new
+                        {
+                            Id = 14,
+                            EducationLevelId = 4,
+                            Nombre = "Segundo semestre",
+                            Numero = (short)2
+                        },
+                        new
+                        {
+                            Id = 15,
+                            EducationLevelId = 4,
+                            Nombre = "Tercer semestre",
+                            Numero = (short)3
+                        },
+                        new
+                        {
+                            Id = 16,
+                            EducationLevelId = 4,
+                            Nombre = "Cuarto semestre",
+                            Numero = (short)4
+                        },
+                        new
+                        {
+                            Id = 17,
+                            EducationLevelId = 4,
+                            Nombre = "Quinto semestre",
+                            Numero = (short)5
+                        },
+                        new
+                        {
+                            Id = 18,
+                            EducationLevelId = 4,
+                            Nombre = "Sexto semestre",
+                            Numero = (short)6
                         });
                 });
 
             modelBuilder.Entity("Models.DB.Group", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    b.Property<int>("Grade")
-                        .HasColumnType("integer")
-                        .HasColumnName("grade");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid>("SchoolId")
-                        .HasColumnType("uuid")
+                    b.Property<int>("GradeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("grade_id");
+
+                    b.Property<int>("SchoolId")
+                        .HasColumnType("integer")
                         .HasColumnName("school_id");
 
-                    b.Property<Guid>("SchoolYearId")
-                        .HasColumnType("uuid")
+                    b.Property<int>("SchoolYearId")
+                        .HasColumnType("integer")
                         .HasColumnName("school_year_id");
 
                     b.Property<string>("Section")
@@ -1175,200 +563,159 @@ namespace SIAEV2.Migrations
                     b.HasKey("Id")
                         .HasName("pk_group");
 
-                    b.HasIndex("SchoolId")
-                        .HasDatabaseName("ix_group_school_id");
+                    b.HasIndex("GradeId")
+                        .HasDatabaseName("ix_group_grade_id");
 
                     b.HasIndex("SchoolYearId")
                         .HasDatabaseName("ix_group_school_year_id");
 
+                    b.HasIndex("SchoolId", "GradeId", "Section", "SchoolYearId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_group_school_id_grade_id_section_school_year_id");
+
                     b.ToTable("group", (string)null);
                 });
 
-            modelBuilder.Entity("Models.DB.Material", b =>
+            modelBuilder.Entity("Models.DB.IndividualSubscription", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    b.Property<int>("AutoEvaluation")
-                        .HasColumnType("integer")
-                        .HasColumnName("auto_evaluation");
-
-                    b.Property<string>("ContentJson")
-                        .HasColumnType("text")
-                        .HasColumnName("content_json");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<Guid>("CreatorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("creator_id");
-
-                    b.Property<string>("CriteriaJson")
-                        .HasColumnType("text")
-                        .HasColumnName("criteria_json");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<Guid?>("DimensionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("dimension_id");
-
-                    b.Property<string>("FileUrl")
-                        .HasColumnType("text")
-                        .HasColumnName("file_url");
-
-                    b.Property<short?>("GradeMax")
-                        .HasColumnType("smallint")
-                        .HasColumnName("grade_max");
-
-                    b.Property<short?>("GradeMin")
-                        .HasColumnType("smallint")
-                        .HasColumnName("grade_min");
-
-                    b.Property<Guid>("MaterialTypeId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("material_type_id");
-
-                    b.Property<int>("Published")
+                    b.Property<int>("Estado")
                         .HasColumnType("integer")
-                        .HasColumnName("published");
+                        .HasColumnName("estado");
 
-                    b.Property<string>("ThumbnailUrl")
-                        .HasColumnType("text")
-                        .HasColumnName("thumbnail_url");
+                    b.Property<DateOnly?>("FechaFin")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_fin");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
+                    b.Property<DateOnly>("FechaInicio")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_inicio");
+
+                    b.Property<int>("Periodo")
+                        .HasColumnType("integer")
+                        .HasColumnName("periodo");
+
+                    b.Property<int>("PlanId")
+                        .HasColumnType("integer")
+                        .HasColumnName("plan_id");
+
+                    b.Property<string>("ReferenciaPago")
                         .HasColumnType("text")
-                        .HasColumnName("title");
+                        .HasColumnName("referencia_pago");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
                     b.HasKey("Id")
-                        .HasName("pk_material");
+                        .HasName("pk_individual_subscription");
 
-                    b.HasIndex("CreatorId")
-                        .HasDatabaseName("ix_material_creator_id");
+                    b.HasIndex("PlanId")
+                        .HasDatabaseName("ix_individual_subscription_plan_id");
 
-                    b.HasIndex("DimensionId")
-                        .HasDatabaseName("ix_material_dimension_id");
-
-                    b.HasIndex("MaterialTypeId")
-                        .HasDatabaseName("ix_material_material_type_id");
-
-                    b.ToTable("material", (string)null);
+                    b.ToTable("individual_subscription", (string)null);
                 });
 
-            modelBuilder.Entity("Models.DB.MaterialTag", b =>
+            modelBuilder.Entity("Models.DB.Invoice", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("MaterialId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("material_id");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Tag")
+                    b.Property<string>("ArchivoR2Key")
+                        .HasColumnType("text")
+                        .HasColumnName("archivo_r2key");
+
+                    b.Property<string>("ArchivoUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("archivo_url");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer")
+                        .HasColumnName("estado");
+
+                    b.Property<string>("Folio")
+                        .HasColumnType("text")
+                        .HasColumnName("folio");
+
+                    b.Property<decimal>("IVA")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("iva");
+
+                    b.Property<string>("RFC")
+                        .HasColumnType("text")
+                        .HasColumnName("rfc");
+
+                    b.Property<string>("RazonSocial")
+                        .HasColumnType("text")
+                        .HasColumnName("razon_social");
+
+                    b.Property<string>("RegimenFiscal")
+                        .HasColumnType("text")
+                        .HasColumnName("regimen_fiscal");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("subtotal");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("total");
+
+                    b.Property<int>("TransactionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("transaction_id");
+
+                    b.Property<string>("UsoCFDI")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("tag");
+                        .HasColumnName("uso_cfdi");
 
                     b.HasKey("Id")
-                        .HasName("pk_material_tag");
+                        .HasName("pk_invoice");
 
-                    b.HasIndex("MaterialId")
-                        .HasDatabaseName("ix_material_tag_material_id");
+                    b.HasIndex("Folio")
+                        .IsUnique()
+                        .HasDatabaseName("ix_invoice_folio");
 
-                    b.ToTable("material_tag", (string)null);
-                });
+                    b.HasIndex("TransactionId")
+                        .HasDatabaseName("ix_invoice_transaction_id");
 
-            modelBuilder.Entity("Models.DB.MaterialType", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("CVE")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("cve");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.HasKey("Id")
-                        .HasName("pk_material_type");
-
-                    b.ToTable("material_type", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-000000000001"),
-                            CVE = "DIALOGO_ANIMADO",
-                            Name = "Diálogo animado interactivo"
-                        },
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-000000000002"),
-                            CVE = "ACTIVIDAD",
-                            Name = "Actividad didáctica"
-                        },
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-000000000003"),
-                            CVE = "JUEGO_DIGITAL",
-                            Name = "Juego digital educativo"
-                        },
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-000000000004"),
-                            CVE = "IMAGEN",
-                            Name = "Material visual / imagen"
-                        },
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-000000000005"),
-                            CVE = "AUDIO",
-                            Name = "Material de audio"
-                        },
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-000000000006"),
-                            CVE = "VIDEO",
-                            Name = "Video educativo"
-                        },
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-000000000007"),
-                            CVE = "DOCUMENTO",
-                            Name = "Documento / ficha de trabajo"
-                        });
+                    b.ToTable("invoice", (string)null);
                 });
 
             modelBuilder.Entity("Models.DB.Notification", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1382,8 +729,8 @@ namespace SIAEV2.Migrations
                         .HasColumnType("text")
                         .HasColumnName("message");
 
-                    b.Property<int>("Read")
-                        .HasColumnType("integer")
+                    b.Property<bool>("Read")
+                        .HasColumnType("boolean")
                         .HasColumnName("read");
 
                     b.Property<string>("Title")
@@ -1408,241 +755,106 @@ namespace SIAEV2.Migrations
                     b.ToTable("notification", (string)null);
                 });
 
-            modelBuilder.Entity("Models.DB.PsychoBAP", b =>
+            modelBuilder.Entity("Models.DB.PaymentMethod", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("BAPType")
-                        .HasColumnType("text")
-                        .HasColumnName("bap_type");
-
-                    b.Property<string>("Context")
-                        .HasColumnType("text")
-                        .HasColumnName("context");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<string>("InclusionIndicator")
-                        .HasColumnType("text")
-                        .HasColumnName("inclusion_indicator");
-
-                    b.Property<Guid>("PsychoeducationalAssessmentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("psychoeducational_assessment_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_psycho_bap");
-
-                    b.HasIndex("PsychoeducationalAssessmentId")
-                        .HasDatabaseName("ix_psycho_bap_psychoeducational_assessment_id");
-
-                    b.ToTable("psycho_bap", (string)null);
-                });
-
-            modelBuilder.Entity("Models.DB.PsychoCollaborator", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("CollaboratorRole")
-                        .HasColumnType("text")
-                        .HasColumnName("collaborator_role");
-
-                    b.Property<int>("DigitalSignature")
                         .HasColumnType("integer")
-                        .HasColumnName("digital_signature");
-
-                    b.Property<string>("ExternalName")
-                        .HasColumnType("text")
-                        .HasColumnName("external_name");
-
-                    b.Property<Guid>("PsychoeducationalAssessmentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("psychoeducational_assessment_id");
-
-                    b.Property<DateTime?>("SignatureDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("signature_date");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_psycho_collaborator");
-
-                    b.HasIndex("PsychoeducationalAssessmentId")
-                        .HasDatabaseName("ix_psycho_collaborator_psychoeducational_assessment_id");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_psycho_collaborator_user_id");
-
-                    b.ToTable("psycho_collaborator", (string)null);
-                });
-
-            modelBuilder.Entity("Models.DB.PsychoeducationalAssessment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("CognitiveDevelopment")
-                        .HasColumnType("text")
-                        .HasColumnName("cognitive_development");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Conclusions")
-                        .HasColumnType("text")
-                        .HasColumnName("conclusions");
+                    b.Property<int?>("AcademySubscriptionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("academy_subscription_id");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("Creativity")
-                        .HasColumnType("text")
-                        .HasColumnName("creativity");
+                    b.Property<bool>("EsPredeterminado")
+                        .HasColumnType("boolean")
+                        .HasColumnName("es_predeterminado");
 
-                    b.Property<string>("EvaluationBehavior")
-                        .HasColumnType("text")
-                        .HasColumnName("evaluation_behavior");
-
-                    b.Property<DateOnly>("EvaluationDate")
-                        .HasColumnType("date")
-                        .HasColumnName("evaluation_date");
-
-                    b.Property<string>("EvaluationReason")
-                        .HasColumnType("text")
-                        .HasColumnName("evaluation_reason");
-
-                    b.Property<string>("FamilyContext")
-                        .HasColumnType("text")
-                        .HasColumnName("family_context");
-
-                    b.Property<string>("FamilySituation")
-                        .HasColumnType("text")
-                        .HasColumnName("family_situation");
-
-                    b.Property<string>("HereditaryHistory")
-                        .HasColumnType("text")
-                        .HasColumnName("hereditary_history");
-
-                    b.Property<string>("LanguageDevelopment")
-                        .HasColumnType("text")
-                        .HasColumnName("language_development");
-
-                    b.Property<string>("LearningEvaluation")
-                        .HasColumnType("text")
-                        .HasColumnName("learning_evaluation");
-
-                    b.Property<string>("MedicalHistory")
-                        .HasColumnType("text")
-                        .HasColumnName("medical_history");
-
-                    b.Property<string>("MotorDevelopment")
-                        .HasColumnType("text")
-                        .HasColumnName("motor_development");
-
-                    b.Property<string>("PhysicalDevelopment")
-                        .HasColumnType("text")
-                        .HasColumnName("physical_development");
-
-                    b.Property<string>("PregnancyHistory")
-                        .HasColumnType("text")
-                        .HasColumnName("pregnancy_history");
-
-                    b.Property<string>("ResultsInterpretation")
-                        .HasColumnType("text")
-                        .HasColumnName("results_interpretation");
-
-                    b.Property<string>("SchoolContext")
-                        .HasColumnType("text")
-                        .HasColumnName("school_context");
-
-                    b.Property<string>("SchoolHistory")
-                        .HasColumnType("text")
-                        .HasColumnName("school_history");
-
-                    b.Property<Guid>("SchoolYearId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("school_year_id");
-
-                    b.Property<string>("SocialContext")
-                        .HasColumnType("text")
-                        .HasColumnName("social_context");
-
-                    b.Property<string>("SocioAffectiveDevelopment")
-                        .HasColumnType("text")
-                        .HasColumnName("socio_affective_development");
-
-                    b.Property<int>("Status")
+                    b.Property<int?>("IndividualSubscriptionId")
                         .HasColumnType("integer")
-                        .HasColumnName("status");
+                        .HasColumnName("individual_subscription_id");
 
-                    b.Property<string>("StudentDescription")
+                    b.Property<string>("Marca")
                         .HasColumnType("text")
-                        .HasColumnName("student_description");
+                        .HasColumnName("marca");
 
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("student_id");
+                    b.Property<int>("Proveedor")
+                        .HasColumnType("integer")
+                        .HasColumnName("proveedor");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
+                    b.Property<string>("ReferenciaExt")
+                        .HasColumnType("text")
+                        .HasColumnName("referencia_ext");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("integer")
+                        .HasColumnName("tipo");
+
+                    b.Property<string>("Titular")
+                        .HasColumnType("text")
+                        .HasColumnName("titular");
+
+                    b.Property<string>("UltimosDigitos")
+                        .HasColumnType("text")
+                        .HasColumnName("ultimos_digitos");
 
                     b.HasKey("Id")
-                        .HasName("pk_psychoeducational_assessment");
+                        .HasName("pk_payment_method");
 
-                    b.HasIndex("SchoolYearId")
-                        .HasDatabaseName("ix_psychoeducational_assessment_school_year_id");
+                    b.HasIndex("AcademySubscriptionId")
+                        .HasDatabaseName("ix_payment_method_academy_subscription_id");
 
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_psychoeducational_assessment_student_id");
+                    b.HasIndex("IndividualSubscriptionId")
+                        .HasDatabaseName("ix_payment_method_individual_subscription_id");
 
-                    b.ToTable("psychoeducational_assessment", (string)null);
+                    b.ToTable("payment_method", (string)null);
                 });
 
             modelBuilder.Entity("Models.DB.Registration", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    b.Property<int>("FinalSituation")
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("FinalSituation")
                         .HasColumnType("integer")
                         .HasColumnName("final_situation");
 
-                    b.Property<Guid>("GroupId")
-                        .HasColumnType("uuid")
+                    b.Property<int>("GroupId")
+                        .HasColumnType("integer")
                         .HasColumnName("group_id");
 
                     b.Property<DateOnly>("IngressDate")
                         .HasColumnType("date")
                         .HasColumnName("ingress_date");
 
-                    b.Property<int>("ItsNew")
-                        .HasColumnType("integer")
-                        .HasColumnName("its_new");
+                    b.Property<bool>("IsNew")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_new");
 
-                    b.Property<int>("ItsTracking")
-                        .HasColumnType("integer")
-                        .HasColumnName("its_tracking");
+                    b.Property<bool>("IsTracking")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_tracking");
 
                     b.Property<string>("Notes")
                         .HasColumnType("text")
                         .HasColumnName("notes");
 
-                    b.Property<Guid>("SchoolYearId")
-                        .HasColumnType("uuid")
+                    b.Property<int>("SchoolYearId")
+                        .HasColumnType("integer")
                         .HasColumnName("school_year_id");
 
                     b.Property<Guid>("StudentId")
@@ -1658,85 +870,128 @@ namespace SIAEV2.Migrations
                     b.HasIndex("SchoolYearId")
                         .HasDatabaseName("ix_registration_school_year_id");
 
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_registration_student_id");
+                    b.HasIndex("StudentId", "SchoolYearId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_registration_student_id_school_year_id");
 
                     b.ToTable("registration", (string)null);
                 });
 
-            modelBuilder.Entity("Models.DB.Report", b =>
+            modelBuilder.Entity("Models.DB.Role", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    b.Property<string>("ContentJson")
-                        .HasColumnType("text")
-                        .HasColumnName("content_json");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("FileUrl")
-                        .HasColumnType("text")
-                        .HasColumnName("file_url");
-
-                    b.Property<string>("Format")
+                    b.Property<string>("Clave")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("format");
+                        .HasColumnName("clave");
 
-                    b.Property<Guid>("GeneratedById")
-                        .HasColumnType("uuid")
-                        .HasColumnName("generated_by_id");
-
-                    b.Property<Guid?>("GroupId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("group_id");
-
-                    b.Property<string>("ParametersJson")
+                    b.Property<string>("Descripcion")
                         .HasColumnType("text")
-                        .HasColumnName("parameters_json");
+                        .HasColumnName("descripcion");
 
-                    b.Property<Guid>("SchoolYearId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("school_year_id");
-
-                    b.Property<Guid?>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("student_id");
-
-                    b.Property<string>("Type")
+                    b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("type");
+                        .HasColumnName("nombre");
+
+                    b.Property<string>("Permisos")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("permisos");
 
                     b.HasKey("Id")
-                        .HasName("pk_report");
+                        .HasName("pk_role");
 
-                    b.HasIndex("GeneratedById")
-                        .HasDatabaseName("ix_report_generated_by_id");
+                    b.HasIndex("Clave")
+                        .IsUnique()
+                        .HasDatabaseName("ix_role_clave");
 
-                    b.HasIndex("GroupId")
-                        .HasDatabaseName("ix_report_group_id");
+                    b.ToTable("role", (string)null);
 
-                    b.HasIndex("SchoolYearId")
-                        .HasDatabaseName("ix_report_school_year_id");
-
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_report_student_id");
-
-                    b.ToTable("report", (string)null);
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Clave = "ADMIN",
+                            Nombre = "Administrador del sistema"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Clave = "SUPERVISOR",
+                            Nombre = "Supervisor de zona"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Clave = "DIRECTOR_USAER",
+                            Nombre = "Director de USAER"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Clave = "ESPECIALISTA_COM",
+                            Nombre = "Especialista en Comunicación"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Clave = "ESPECIALISTA_PSI",
+                            Nombre = "Especialista en Psicología"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Clave = "ESPECIALISTA_APR",
+                            Nombre = "Especialista en Aprendizaje"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Clave = "TRABAJO_SOCIAL",
+                            Nombre = "Trabajo Social"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Clave = "DOCENTE",
+                            Nombre = "Docente de grupo regular"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Clave = "TUTOR",
+                            Nombre = "Padre / tutor"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Clave = "ALUMNO",
+                            Nombre = "Alumno (autoservicio)"
+                        });
                 });
 
             modelBuilder.Entity("Models.DB.School", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AcademySubscriptionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("academy_subscription_id");
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activa");
 
                     b.Property<string>("Address")
                         .HasColumnType("text")
@@ -1750,25 +1005,43 @@ namespace SIAEV2.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<int>("EducationLevelId")
+                        .HasColumnType("integer")
+                        .HasColumnName("education_level_id");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
 
-                    b.Property<Guid>("SchoolZoneId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("school_zone_id");
+                    b.Property<string>("Phone")
+                        .HasColumnType("text")
+                        .HasColumnName("phone");
 
-                    b.Property<int>("Status")
+                    b.Property<int?>("SchoolZoneId")
                         .HasColumnType("integer")
-                        .HasColumnName("status");
+                        .HasColumnName("school_zone_id");
 
                     b.Property<int>("Turn")
                         .HasColumnType("integer")
                         .HasColumnName("turn");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
                     b.HasKey("Id")
                         .HasName("pk_school");
+
+                    b.HasIndex("AcademySubscriptionId")
+                        .HasDatabaseName("ix_school_academy_subscription_id");
+
+                    b.HasIndex("CCT")
+                        .IsUnique()
+                        .HasDatabaseName("ix_school_cct");
+
+                    b.HasIndex("EducationLevelId")
+                        .HasDatabaseName("ix_school_education_level_id");
 
                     b.HasIndex("SchoolZoneId")
                         .HasDatabaseName("ix_school_school_zone_id");
@@ -1778,10 +1051,16 @@ namespace SIAEV2.Migrations
 
             modelBuilder.Entity("Models.DB.SchoolYear", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
 
                     b.Property<DateOnly>("EndDate")
                         .HasColumnType("date")
@@ -1796,22 +1075,28 @@ namespace SIAEV2.Migrations
                         .HasColumnType("date")
                         .HasColumnName("start_date");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
-                        .HasColumnName("status");
-
                     b.HasKey("Id")
                         .HasName("pk_school_year");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_school_year_name");
 
                     b.ToTable("school_year", (string)null);
                 });
 
             modelBuilder.Entity("Models.DB.SchoolZone", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AcademySubscriptionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("academy_subscription_id");
 
                     b.Property<string>("CCT")
                         .IsRequired()
@@ -1834,6 +1119,13 @@ namespace SIAEV2.Migrations
                     b.HasKey("Id")
                         .HasName("pk_school_zone");
 
+                    b.HasIndex("AcademySubscriptionId")
+                        .HasDatabaseName("ix_school_zone_academy_subscription_id");
+
+                    b.HasIndex("CCT")
+                        .IsUnique()
+                        .HasDatabaseName("ix_school_zone_cct");
+
                     b.ToTable("school_zone", (string)null);
                 });
 
@@ -1842,7 +1134,12 @@ namespace SIAEV2.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("uuid_generate_v4()");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
 
                     b.Property<DateOnly>("BirthDate")
                         .HasColumnType("date")
@@ -1861,10 +1158,6 @@ namespace SIAEV2.Migrations
                         .HasColumnType("text")
                         .HasColumnName("father_last_name");
 
-                    b.Property<int>("Gender")
-                        .HasColumnType("integer")
-                        .HasColumnName("gender");
-
                     b.Property<string>("MotherLastName")
                         .HasColumnType("text")
                         .HasColumnName("mother_last_name");
@@ -1878,41 +1171,66 @@ namespace SIAEV2.Migrations
                         .HasColumnType("text")
                         .HasColumnName("photo_url");
 
-                    b.Property<int>("Status")
+                    b.Property<int>("Sexo")
                         .HasColumnType("integer")
-                        .HasColumnName("status");
+                        .HasColumnName("sexo");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
                     b.HasKey("Id")
                         .HasName("pk_student");
+
+                    b.HasIndex("CURP")
+                        .IsUnique()
+                        .HasDatabaseName("ix_student_curp");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_student_user_id");
 
                     b.ToTable("student", (string)null);
                 });
 
+            modelBuilder.Entity("Models.DB.Student", b =>
+                {
+                    b.HasOne("Models.DB.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_student_user_user_id");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Models.DB.StudentAttentionAreas", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("AttentionAreaId")
-                        .HasColumnType("uuid")
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AttentionAreaId")
+                        .HasColumnType("integer")
                         .HasColumnName("attention_area_id");
 
-                    b.Property<int>("IsRequired")
-                        .HasColumnType("integer")
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_required");
 
                     b.Property<string>("Notes")
                         .HasColumnType("text")
                         .HasColumnName("notes");
 
-                    b.Property<Guid>("SchoolYearId")
-                        .HasColumnType("uuid")
+                    b.Property<int>("SchoolYearId")
+                        .HasColumnType("integer")
                         .HasColumnName("school_year_id");
 
                     b.Property<Guid>("StudentId")
@@ -1928,37 +1246,40 @@ namespace SIAEV2.Migrations
                     b.HasIndex("SchoolYearId")
                         .HasDatabaseName("ix_student_attention_area_school_year_id");
 
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_student_attention_area_student_id");
+                    b.HasIndex("StudentId", "AttentionAreaId", "SchoolYearId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_student_attention_area_student_id_attention_area_id_school_");
 
                     b.ToTable("student_attention_area", (string)null);
                 });
 
             modelBuilder.Entity("Models.DB.StudentDisability", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("DisabilityId")
-                        .HasColumnType("uuid")
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DisabilityId")
+                        .HasColumnType("integer")
                         .HasColumnName("disability_id");
 
-                    b.Property<int>("ExternalDiagnosis")
-                        .HasColumnType("integer")
-                        .HasColumnName("external_diagnosis");
-
-                    b.Property<string>("FileUrl")
+                    b.Property<string>("DocumentUrl")
                         .HasColumnType("text")
-                        .HasColumnName("file_url");
+                        .HasColumnName("document_url");
+
+                    b.Property<bool>("ExternalDiagnosis")
+                        .HasColumnType("boolean")
+                        .HasColumnName("external_diagnosis");
 
                     b.Property<string>("Notes")
                         .HasColumnType("text")
                         .HasColumnName("notes");
 
-                    b.Property<Guid>("SchoolYearId")
-                        .HasColumnType("uuid")
+                    b.Property<int>("SchoolYearId")
+                        .HasColumnType("integer")
                         .HasColumnName("school_year_id");
 
                     b.Property<Guid>("StudentId")
@@ -1966,298 +1287,179 @@ namespace SIAEV2.Migrations
                         .HasColumnName("student_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_student_disabilitie");
+                        .HasName("pk_student_disability");
 
                     b.HasIndex("DisabilityId")
-                        .HasDatabaseName("ix_student_disabilitie_disability_id");
+                        .HasDatabaseName("ix_student_disability_disability_id");
 
                     b.HasIndex("SchoolYearId")
-                        .HasDatabaseName("ix_student_disabilitie_school_year_id");
+                        .HasDatabaseName("ix_student_disability_school_year_id");
 
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_student_disabilitie_student_id");
+                    b.HasIndex("StudentId", "DisabilityId", "SchoolYearId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_student_disability_student_id_disability_id_school_year_id");
 
-                    b.ToTable("student_disabilitie", (string)null);
+                    b.ToTable("student_disability", (string)null);
                 });
 
-            modelBuilder.Entity("Models.DB.TEAAnswer", b =>
+            modelBuilder.Entity("Models.DB.SubscriptionPlan", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    b.Property<short?>("Frequency")
-                        .HasColumnType("smallint")
-                        .HasColumnName("frequency");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid>("IndicatorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("indicator_id");
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
 
-                    b.Property<short?>("Intensity")
-                        .HasColumnType("smallint")
-                        .HasColumnName("intensity");
+                    b.Property<string>("Caracteristicas")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("caracteristicas");
 
-                    b.Property<string>("Observation")
-                        .HasColumnType("text")
-                        .HasColumnName("observation");
-
-                    b.Property<Guid>("ScreeningId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("screening_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_tea_answer");
-
-                    b.HasIndex("IndicatorId")
-                        .HasDatabaseName("ix_tea_answer_indicator_id");
-
-                    b.HasIndex("ScreeningId")
-                        .HasDatabaseName("ix_tea_answer_screening_id");
-
-                    b.ToTable("tea_answer", (string)null);
-                });
-
-            modelBuilder.Entity("Models.DB.TEAIndicator", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<short?>("AgeRangeMax")
-                        .HasColumnType("smallint")
-                        .HasColumnName("age_range_max");
-
-                    b.Property<short?>("AgeRangeMin")
-                        .HasColumnType("smallint")
-                        .HasColumnName("age_range_min");
-
-                    b.Property<string>("Code")
+                    b.Property<string>("Clave")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("code");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<int>("Domain")
-                        .HasColumnType("integer")
-                        .HasColumnName("domain");
-
-                    b.Property<short>("Order")
-                        .HasColumnType("smallint")
-                        .HasColumnName("order");
-
-                    b.HasKey("Id")
-                        .HasName("pk_tea_indicator");
-
-                    b.ToTable("tea_indicator", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-000000000001"),
-                            AgeRangeMax = (short)144,
-                            AgeRangeMin = (short)72,
-                            Code = "TEA_CS_01",
-                            Description = "Dificultad para iniciar o mantener conversaciones",
-                            Domain = 0,
-                            Order = (short)1
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-000000000002"),
-                            AgeRangeMax = (short)144,
-                            AgeRangeMin = (short)72,
-                            Code = "TEA_CS_02",
-                            Description = "Respuestas inusuales en interacciones sociales",
-                            Domain = 0,
-                            Order = (short)2
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-000000000003"),
-                            AgeRangeMax = (short)144,
-                            AgeRangeMin = (short)72,
-                            Code = "TEA_CS_03",
-                            Description = "Contacto visual limitado o atípico",
-                            Domain = 0,
-                            Order = (short)3
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-000000000004"),
-                            AgeRangeMax = (short)144,
-                            AgeRangeMin = (short)72,
-                            Code = "TEA_CS_04",
-                            Description = "Dificultad para comprender lenguaje no literal (ironía, chistes)",
-                            Domain = 0,
-                            Order = (short)4
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-000000000005"),
-                            AgeRangeMax = (short)144,
-                            AgeRangeMin = (short)72,
-                            Code = "TEA_CS_05",
-                            Description = "Dificultad para hacer amigos o mantener relaciones",
-                            Domain = 0,
-                            Order = (short)5
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-000000000006"),
-                            AgeRangeMax = (short)144,
-                            AgeRangeMin = (short)72,
-                            Code = "TEA_CS_06",
-                            Description = "Expresión emocional limitada o inadecuada al contexto",
-                            Domain = 0,
-                            Order = (short)6
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-000000000007"),
-                            AgeRangeMax = (short)144,
-                            AgeRangeMin = (short)72,
-                            Code = "TEA_CS_07",
-                            Description = "Dificultad para tomar turnos en la conversación",
-                            Domain = 0,
-                            Order = (short)7
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-000000000008"),
-                            AgeRangeMax = (short)144,
-                            AgeRangeMin = (short)72,
-                            Code = "TEA_CS_08",
-                            Description = "Prosodia inusual (tono monótono, volumen inadecuado)",
-                            Domain = 0,
-                            Order = (short)8
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-000000000009"),
-                            AgeRangeMax = (short)144,
-                            AgeRangeMin = (short)72,
-                            Code = "TEA_CR_01",
-                            Description = "Intereses intensos y restringidos",
-                            Domain = 1,
-                            Order = (short)1
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-00000000000a"),
-                            AgeRangeMax = (short)144,
-                            AgeRangeMin = (short)72,
-                            Code = "TEA_CR_02",
-                            Description = "Inflexibilidad ante cambios de rutina",
-                            Domain = 1,
-                            Order = (short)2
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-00000000000b"),
-                            AgeRangeMax = (short)144,
-                            AgeRangeMin = (short)72,
-                            Code = "TEA_CR_03",
-                            Description = "Movimientos repetitivos o estereotipados",
-                            Domain = 1,
-                            Order = (short)3
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-00000000000c"),
-                            AgeRangeMax = (short)144,
-                            AgeRangeMin = (short)72,
-                            Code = "TEA_CR_04",
-                            Description = "Hiper o hipo reactividad sensorial",
-                            Domain = 1,
-                            Order = (short)4
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-00000000000d"),
-                            AgeRangeMax = (short)144,
-                            AgeRangeMin = (short)72,
-                            Code = "TEA_CR_05",
-                            Description = "Adherencia excesiva a reglas o patrones",
-                            Domain = 1,
-                            Order = (short)5
-                        });
-                });
-
-            modelBuilder.Entity("Models.DB.TEAScreening", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<int?>("AlertLevel")
-                        .HasColumnType("integer")
-                        .HasColumnName("alert_level");
+                        .HasColumnName("clave");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<Guid>("EvaluatorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("evaluator_id");
-
-                    b.Property<string>("GeneralObservations")
+                    b.Property<string>("Descripcion")
                         .HasColumnType("text")
-                        .HasColumnName("general_observations");
+                        .HasColumnName("descripcion");
 
-                    b.Property<string>("ObservationContext")
-                        .HasColumnType("text")
-                        .HasColumnName("observation_context");
-
-                    b.Property<int>("RequiresCanalization")
+                    b.Property<int?>("MaxAlumnos")
                         .HasColumnType("integer")
-                        .HasColumnName("requires_canalization");
+                        .HasColumnName("max_alumnos");
 
-                    b.Property<Guid>("SchoolYearId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("school_year_id");
+                    b.Property<int?>("MaxUsuarios")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_usuarios");
 
-                    b.Property<DateOnly>("ScreeningDate")
-                        .HasColumnType("date")
-                        .HasColumnName("screening_date");
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nombre");
 
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("student_id");
+                    b.Property<decimal?>("PrecioAnual")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("precio_anual");
 
-                    b.Property<short?>("TotalScore")
-                        .HasColumnType("smallint")
-                        .HasColumnName("total_score");
+                    b.Property<decimal>("PrecioMensual")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("precio_mensual");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id")
-                        .HasName("pk_tea_screening");
+                        .HasName("pk_subscription_plan");
 
-                    b.HasIndex("EvaluatorId")
-                        .HasDatabaseName("ix_tea_screening_evaluator_id");
+                    b.HasIndex("Clave")
+                        .IsUnique()
+                        .HasDatabaseName("ix_subscription_plan_clave");
 
-                    b.HasIndex("SchoolYearId")
-                        .HasDatabaseName("ix_tea_screening_school_year_id");
+                    b.ToTable("subscription_plan", (string)null);
+                });
 
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_tea_screening_student_id");
+            modelBuilder.Entity("Models.DB.Transaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    b.ToTable("tea_screening", (string)null);
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AcademySubscriptionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("academy_subscription_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Descripcion")
+                        .HasColumnType("text")
+                        .HasColumnName("descripcion");
+
+                    b.Property<string>("ErrorMensaje")
+                        .HasColumnType("text")
+                        .HasColumnName("error_mensaje");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer")
+                        .HasColumnName("estado");
+
+                    b.Property<DateTime?>("FechaPago")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_pago");
+
+                    b.Property<int?>("IndividualSubscriptionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("individual_subscription_id");
+
+                    b.Property<string>("MetadataJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("metadata_json");
+
+                    b.Property<string>("Moneda")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("moneda");
+
+                    b.Property<decimal>("Monto")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("monto");
+
+                    b.Property<int?>("PaymentMethodId")
+                        .HasColumnType("integer")
+                        .HasColumnName("payment_method_id");
+
+                    b.Property<string>("ReferenciaExt")
+                        .HasColumnType("text")
+                        .HasColumnName("referencia_ext");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("integer")
+                        .HasColumnName("tipo");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_transaction");
+
+                    b.HasIndex("AcademySubscriptionId")
+                        .HasDatabaseName("ix_transaction_academy_subscription_id");
+
+                    b.HasIndex("IndividualSubscriptionId")
+                        .HasDatabaseName("ix_transaction_individual_subscription_id");
+
+                    b.HasIndex("PaymentMethodId")
+                        .HasDatabaseName("ix_transaction_payment_method_id");
+
+                    b.ToTable("transaction", (string)null);
                 });
 
             modelBuilder.Entity("Models.DB.Tutor", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
                         .HasColumnType("text")
@@ -2272,23 +1474,30 @@ namespace SIAEV2.Migrations
                         .HasColumnType("text")
                         .HasColumnName("email");
 
-                    b.Property<string>("Parent")
+                    b.Property<string>("Parentesco")
                         .HasColumnType("text")
-                        .HasColumnName("parent");
+                        .HasColumnName("parentesco");
 
-                    b.Property<string>("PhoneNumber")
+                    b.Property<string>("Phone")
                         .HasColumnType("text")
-                        .HasColumnName("phone_number");
+                        .HasColumnName("phone");
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid")
                         .HasColumnName("student_id");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
 
                     b.HasKey("Id")
                         .HasName("pk_tutor");
 
                     b.HasIndex("StudentId")
                         .HasDatabaseName("ix_tutor_student_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_tutor_user_id");
 
                     b.ToTable("tutor", (string)null);
                 });
@@ -2298,7 +1507,16 @@ namespace SIAEV2.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("uuid_generate_v4()");
+
+                    b.Property<int?>("AcademySubscriptionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("academy_subscription_id");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
 
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("text")
@@ -2337,25 +1555,17 @@ namespace SIAEV2.Migrations
                         .HasColumnType("text")
                         .HasColumnName("password_salt");
 
-                    b.Property<string>("PhoneNumber")
+                    b.Property<string>("Phone")
                         .HasColumnType("text")
-                        .HasColumnName("phone_number");
+                        .HasColumnName("phone");
 
-                    b.Property<int>("Role")
+                    b.Property<int>("RoleId")
                         .HasColumnType("integer")
-                        .HasColumnName("role");
+                        .HasColumnName("role_id");
 
-                    b.Property<Guid?>("SchoolZoneId")
-                        .HasColumnType("uuid")
+                    b.Property<int?>("SchoolZoneId")
+                        .HasColumnType("integer")
                         .HasColumnName("school_zone_id");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
-                        .HasColumnName("status");
-
-                    b.Property<Guid?>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("student_id");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -2364,11 +1574,18 @@ namespace SIAEV2.Migrations
                     b.HasKey("Id")
                         .HasName("pk_user");
 
+                    b.HasIndex("AcademySubscriptionId")
+                        .HasDatabaseName("ix_user_academy_subscription_id");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("ix_user_email");
+
+                    b.HasIndex("RoleId")
+                        .HasDatabaseName("ix_user_role_id");
+
                     b.HasIndex("SchoolZoneId")
                         .HasDatabaseName("ix_user_school_zone_id");
-
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_user_student_id");
 
                     b.ToTable("user", (string)null);
 
@@ -2376,35 +1593,37 @@ namespace SIAEV2.Migrations
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000001"),
+                            Activo = true,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@system.com",
-                            FatherLastName = "Admin",
+                            FatherLastName = "Sistema",
                             Name = "Admin",
                             PasswordHash = "cTZfg3WXU8h6n6cVkemLpgFsbETdN1tsoL3dVM10HuM=",
                             PasswordSalt = "322JhrUxDTVzC5KijDL+FlE+Zk22My5MRBC89R8noN4=",
-                            Role = 1,
-                            Status = 1,
+                            RoleId = 1,
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
             modelBuilder.Entity("Models.DB.UserGroups", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    b.Property<int>("EsTitular")
-                        .HasColumnType("integer")
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("EsTitular")
+                        .HasColumnType("boolean")
                         .HasColumnName("es_titular");
 
-                    b.Property<Guid>("GroupId")
-                        .HasColumnType("uuid")
+                    b.Property<int>("GroupId")
+                        .HasColumnType("integer")
                         .HasColumnName("group_id");
 
-                    b.Property<Guid>("SchoolYearId")
-                        .HasColumnType("uuid")
+                    b.Property<int>("SchoolYearId")
+                        .HasColumnType("integer")
                         .HasColumnName("school_year_id");
 
                     b.Property<Guid>("UserId")
@@ -2420,25 +1639,28 @@ namespace SIAEV2.Migrations
                     b.HasIndex("SchoolYearId")
                         .HasDatabaseName("ix_user_group_school_year_id");
 
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_user_group_user_id");
+                    b.HasIndex("UserId", "GroupId", "SchoolYearId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_user_group_user_id_group_id_school_year_id");
 
                     b.ToTable("user_group", (string)null);
                 });
 
             modelBuilder.Entity("Models.DB.UserSchools", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("SchoolId")
-                        .HasColumnType("uuid")
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("SchoolId")
+                        .HasColumnType("integer")
                         .HasColumnName("school_id");
 
-                    b.Property<Guid>("SchoolYearId")
-                        .HasColumnType("uuid")
+                    b.Property<int>("SchoolYearId")
+                        .HasColumnType("integer")
                         .HasColumnName("school_year_id");
 
                     b.Property<Guid>("UserId")
@@ -2454,69 +1676,23 @@ namespace SIAEV2.Migrations
                     b.HasIndex("SchoolYearId")
                         .HasDatabaseName("ix_user_school_school_year_id");
 
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_user_school_user_id");
+                    b.HasIndex("UserId", "SchoolId", "SchoolYearId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_user_school_user_id_school_id_school_year_id");
 
                     b.ToTable("user_school", (string)null);
                 });
 
-            modelBuilder.Entity("Models.DB.Assignment", b =>
+            modelBuilder.Entity("Models.DB.AcademySubscription", b =>
                 {
-                    b.HasOne("Models.DB.User", "AssignedBy")
+                    b.HasOne("Models.DB.SubscriptionPlan", "Plan")
                         .WithMany()
-                        .HasForeignKey("AssignedById")
+                        .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_assignment_user_assigned_by_id");
+                        .HasConstraintName("fk_academy_subscription_subscription_plan_plan_id");
 
-                    b.HasOne("Models.DB.Material", "Material")
-                        .WithMany()
-                        .HasForeignKey("MaterialId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_assignment_material_material_id");
-
-                    b.HasOne("Models.DB.SchoolYear", "SchoolYear")
-                        .WithMany()
-                        .HasForeignKey("SchoolYearId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_assignment_school_year_school_year_id");
-
-                    b.Navigation("AssignedBy");
-
-                    b.Navigation("Material");
-
-                    b.Navigation("SchoolYear");
-                });
-
-            modelBuilder.Entity("Models.DB.AssignmentStudent", b =>
-                {
-                    b.HasOne("Models.DB.Assignment", "Assignment")
-                        .WithMany()
-                        .HasForeignKey("AssignmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_assignment_student_assignment_assignment_id");
-
-                    b.HasOne("Models.DB.User", "EvaluatedBy")
-                        .WithMany()
-                        .HasForeignKey("EvaluatedById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_assignment_student_user_evaluated_by_id");
-
-                    b.HasOne("Models.DB.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_assignment_student_student_student_id");
-
-                    b.Navigation("Assignment");
-
-                    b.Navigation("EvaluatedBy");
-
-                    b.Navigation("Student");
+                    b.Navigation("Plan");
                 });
 
             modelBuilder.Entity("Models.DB.AttentionMode", b =>
@@ -2540,205 +1716,27 @@ namespace SIAEV2.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("Models.DB.AuditLog", b =>
+            modelBuilder.Entity("Models.DB.Grade", b =>
                 {
-                    b.HasOne("Models.DB.User", "User")
+                    b.HasOne("Models.DB.EducationLevel", "EducationLevel")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_audit_log_user_user_id");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Models.DB.CIEAnswer", b =>
-                {
-                    b.HasOne("Models.DB.CIEEvaluation", "Evaluation")
-                        .WithMany()
-                        .HasForeignKey("EvaluationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_cie_answer_cie_evaluation_evaluation_id");
-
-                    b.HasOne("Models.DB.CIESubIndicator", "SubIndicator")
-                        .WithMany()
-                        .HasForeignKey("SubIndicatorId")
+                        .HasForeignKey("EducationLevelId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_cie_answer_cie_sub_indicator_sub_indicator_id");
+                        .HasConstraintName("fk_grade_education_level_education_level_id");
 
-                    b.Navigation("Evaluation");
-
-                    b.Navigation("SubIndicator");
-                });
-
-            modelBuilder.Entity("Models.DB.CIEEvaluation", b =>
-                {
-                    b.HasOne("Models.DB.CIEDimension", "Dimension")
-                        .WithMany()
-                        .HasForeignKey("DimensionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_cie_evaluation_cie_dimension_dimension_id");
-
-                    b.HasOne("Models.DB.User", "Evaluator")
-                        .WithMany()
-                        .HasForeignKey("EvaluatorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_cie_evaluation_user_evaluator_id");
-
-                    b.HasOne("Models.DB.SchoolYear", "SchoolYear")
-                        .WithMany()
-                        .HasForeignKey("SchoolYearId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_cie_evaluation_school_year_school_year_id");
-
-                    b.HasOne("Models.DB.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_cie_evaluation_student_student_id");
-
-                    b.Navigation("Dimension");
-
-                    b.Navigation("Evaluator");
-
-                    b.Navigation("SchoolYear");
-
-                    b.Navigation("Student");
-                });
-
-            modelBuilder.Entity("Models.DB.CIEIndicator", b =>
-                {
-                    b.HasOne("Models.DB.CIEDimension", "Dimension")
-                        .WithMany()
-                        .HasForeignKey("DimensionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_cie_indicator_cie_dimension_dimension_id");
-
-                    b.Navigation("Dimension");
-                });
-
-            modelBuilder.Entity("Models.DB.CIEPhonologyAnswer", b =>
-                {
-                    b.HasOne("Models.DB.CIEEvaluation", "Evaluation")
-                        .WithMany()
-                        .HasForeignKey("EvaluationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_cie_phonology_answer_cie_evaluation_evaluation_id");
-
-                    b.HasOne("Models.DB.CIESubIndicator", "SubIndicator")
-                        .WithMany()
-                        .HasForeignKey("SubIndicatorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_cie_phonology_answer_cie_sub_indicator_sub_indicator_id");
-
-                    b.Navigation("Evaluation");
-
-                    b.Navigation("SubIndicator");
-                });
-
-            modelBuilder.Entity("Models.DB.CIESubIndicator", b =>
-                {
-                    b.HasOne("Models.DB.CIEIndicator", "Indicator")
-                        .WithMany()
-                        .HasForeignKey("IndicatorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_cie_sub_indicator_cie_indicator_indicator_id");
-
-                    b.Navigation("Indicator");
-                });
-
-            modelBuilder.Entity("Models.DB.Canalization", b =>
-                {
-                    b.HasOne("Models.DB.AttentionArea", "AttentionArea")
-                        .WithMany()
-                        .HasForeignKey("AttentionAreaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_canalization_attention_area_attention_area_id");
-
-                    b.HasOne("Models.DB.User", "Receiver")
-                        .WithMany()
-                        .HasForeignKey("ReceiverId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_canalization_user_receiver_id");
-
-                    b.HasOne("Models.DB.User", "Requester")
-                        .WithMany()
-                        .HasForeignKey("RequesterId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_canalization_user_requester_id");
-
-                    b.HasOne("Models.DB.SchoolYear", "SchoolYear")
-                        .WithMany()
-                        .HasForeignKey("SchoolYearId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_canalization_school_year_school_year_id");
-
-                    b.HasOne("Models.DB.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_canalization_student_student_id");
-
-                    b.Navigation("AttentionArea");
-
-                    b.Navigation("Receiver");
-
-                    b.Navigation("Requester");
-
-                    b.Navigation("SchoolYear");
-
-                    b.Navigation("Student");
-                });
-
-            modelBuilder.Entity("Models.DB.Dialog", b =>
-                {
-                    b.HasOne("Models.DB.Material", "Material")
-                        .WithMany()
-                        .HasForeignKey("MaterialId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_dialog_material_material_id");
-
-                    b.Navigation("Material");
-                });
-
-            modelBuilder.Entity("Models.DB.DialogProgress", b =>
-                {
-                    b.HasOne("Models.DB.Dialog", "Dialog")
-                        .WithMany()
-                        .HasForeignKey("DialogId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_dialog_progress_dialog_dialog_id");
-
-                    b.HasOne("Models.DB.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_dialog_progress_student_student_id");
-
-                    b.Navigation("Dialog");
-
-                    b.Navigation("Student");
+                    b.Navigation("EducationLevel");
                 });
 
             modelBuilder.Entity("Models.DB.Group", b =>
                 {
+                    b.HasOne("Models.DB.Grade", "Grade")
+                        .WithMany()
+                        .HasForeignKey("GradeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_group_grade_grade_id");
+
                     b.HasOne("Models.DB.School", "School")
                         .WithMany()
                         .HasForeignKey("SchoolId")
@@ -2753,50 +1751,35 @@ namespace SIAEV2.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_group_school_year_school_year_id");
 
+                    b.Navigation("Grade");
+
                     b.Navigation("School");
 
                     b.Navigation("SchoolYear");
                 });
 
-            modelBuilder.Entity("Models.DB.Material", b =>
+            modelBuilder.Entity("Models.DB.IndividualSubscription", b =>
                 {
-                    b.HasOne("Models.DB.User", "Creator")
+                    b.HasOne("Models.DB.SubscriptionPlan", "Plan")
                         .WithMany()
-                        .HasForeignKey("CreatorId")
+                        .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_material_user_creator_id");
+                        .HasConstraintName("fk_individual_subscription_subscription_plan_plan_id");
 
-                    b.HasOne("Models.DB.CIEDimension", "Dimension")
-                        .WithMany()
-                        .HasForeignKey("DimensionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_material_cie_dimension_dimension_id");
-
-                    b.HasOne("Models.DB.MaterialType", "MaterialType")
-                        .WithMany()
-                        .HasForeignKey("MaterialTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_material_material_type_material_type_id");
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Dimension");
-
-                    b.Navigation("MaterialType");
+                    b.Navigation("Plan");
                 });
 
-            modelBuilder.Entity("Models.DB.MaterialTag", b =>
+            modelBuilder.Entity("Models.DB.Invoice", b =>
                 {
-                    b.HasOne("Models.DB.Material", "Material")
+                    b.HasOne("Models.DB.Transaction", "Transaction")
                         .WithMany()
-                        .HasForeignKey("MaterialId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_material_tag_material_material_id");
+                        .HasConstraintName("fk_invoice_transaction_transaction_id");
 
-                    b.Navigation("Material");
+                    b.Navigation("Transaction");
                 });
 
             modelBuilder.Entity("Models.DB.Notification", b =>
@@ -2811,57 +1794,23 @@ namespace SIAEV2.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Models.DB.PsychoBAP", b =>
+            modelBuilder.Entity("Models.DB.PaymentMethod", b =>
                 {
-                    b.HasOne("Models.DB.PsychoeducationalAssessment", "PsychoeducationalAssessment")
+                    b.HasOne("Models.DB.AcademySubscription", "AcademySubscription")
                         .WithMany()
-                        .HasForeignKey("PsychoeducationalAssessmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_psycho_bap_psychoeducational_assessment_psychoeducational_a");
-
-                    b.Navigation("PsychoeducationalAssessment");
-                });
-
-            modelBuilder.Entity("Models.DB.PsychoCollaborator", b =>
-                {
-                    b.HasOne("Models.DB.PsychoeducationalAssessment", "PsychoeducationalAssessment")
-                        .WithMany()
-                        .HasForeignKey("PsychoeducationalAssessmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_psycho_collaborator_psychoeducational_assessment_psychoeduc");
-
-                    b.HasOne("Models.DB.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("AcademySubscriptionId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_psycho_collaborator_user_user_id");
+                        .HasConstraintName("fk_payment_method_academy_subscription_academy_subscription_id");
 
-                    b.Navigation("PsychoeducationalAssessment");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Models.DB.PsychoeducationalAssessment", b =>
-                {
-                    b.HasOne("Models.DB.SchoolYear", "SchoolYear")
+                    b.HasOne("Models.DB.IndividualSubscription", "IndividualSubscription")
                         .WithMany()
-                        .HasForeignKey("SchoolYearId")
+                        .HasForeignKey("IndividualSubscriptionId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_psychoeducational_assessment_school_year_school_year_id");
+                        .HasConstraintName("fk_payment_method_individual_subscription_individual_subscript");
 
-                    b.HasOne("Models.DB.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_psychoeducational_assessment_student_student_id");
+                    b.Navigation("AcademySubscription");
 
-                    b.Navigation("SchoolYear");
-
-                    b.Navigation("Student");
+                    b.Navigation("IndividualSubscription");
                 });
 
             modelBuilder.Entity("Models.DB.Registration", b =>
@@ -2894,53 +1843,43 @@ namespace SIAEV2.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("Models.DB.Report", b =>
-                {
-                    b.HasOne("Models.DB.User", "GeneratedBy")
-                        .WithMany()
-                        .HasForeignKey("GeneratedById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_report_user_generated_by_id");
-
-                    b.HasOne("Models.DB.Group", "Group")
-                        .WithMany()
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_report_group_group_id");
-
-                    b.HasOne("Models.DB.SchoolYear", "SchoolYear")
-                        .WithMany()
-                        .HasForeignKey("SchoolYearId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_report_school_year_school_year_id");
-
-                    b.HasOne("Models.DB.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_report_student_student_id");
-
-                    b.Navigation("GeneratedBy");
-
-                    b.Navigation("Group");
-
-                    b.Navigation("SchoolYear");
-
-                    b.Navigation("Student");
-                });
-
             modelBuilder.Entity("Models.DB.School", b =>
                 {
+                    b.HasOne("Models.DB.AcademySubscription", "AcademySubscription")
+                        .WithMany()
+                        .HasForeignKey("AcademySubscriptionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_school_academy_subscription_academy_subscription_id");
+
+                    b.HasOne("Models.DB.EducationLevel", "EducationLevel")
+                        .WithMany()
+                        .HasForeignKey("EducationLevelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_school_education_level_education_level_id");
+
                     b.HasOne("Models.DB.SchoolZone", "SchoolZone")
                         .WithMany("Schools")
                         .HasForeignKey("SchoolZoneId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("fk_school_school_zone_school_zone_id");
 
+                    b.Navigation("AcademySubscription");
+
+                    b.Navigation("EducationLevel");
+
                     b.Navigation("SchoolZone");
+                });
+
+            modelBuilder.Entity("Models.DB.SchoolZone", b =>
+                {
+                    b.HasOne("Models.DB.AcademySubscription", "AcademySubscription")
+                        .WithMany()
+                        .HasForeignKey("AcademySubscriptionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_school_zone_academy_subscription_academy_subscription_id");
+
+                    b.Navigation("AcademySubscription");
                 });
 
             modelBuilder.Entity("Models.DB.StudentAttentionAreas", b =>
@@ -2980,21 +1919,21 @@ namespace SIAEV2.Migrations
                         .HasForeignKey("DisabilityId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_student_disabilitie_disabilitie_disability_id");
+                        .HasConstraintName("fk_student_disability_disability_disability_id");
 
                     b.HasOne("Models.DB.SchoolYear", "SchoolYear")
                         .WithMany()
                         .HasForeignKey("SchoolYearId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_student_disabilitie_school_year_school_year_id");
+                        .HasConstraintName("fk_student_disability_school_year_school_year_id");
 
                     b.HasOne("Models.DB.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_student_disabilitie_student_student_id");
+                        .HasConstraintName("fk_student_disability_student_student_id");
 
                     b.Navigation("Disability");
 
@@ -3003,55 +1942,31 @@ namespace SIAEV2.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("Models.DB.TEAAnswer", b =>
+            modelBuilder.Entity("Models.DB.Transaction", b =>
                 {
-                    b.HasOne("Models.DB.TEAIndicator", "Indicator")
+                    b.HasOne("Models.DB.AcademySubscription", "AcademySubscription")
                         .WithMany()
-                        .HasForeignKey("IndicatorId")
+                        .HasForeignKey("AcademySubscriptionId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_tea_answer_tea_indicator_indicator_id");
+                        .HasConstraintName("fk_transaction_academy_subscription_academy_subscription_id");
 
-                    b.HasOne("Models.DB.TEAScreening", "Screening")
+                    b.HasOne("Models.DB.IndividualSubscription", "IndividualSubscription")
                         .WithMany()
-                        .HasForeignKey("ScreeningId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_tea_answer_tea_screening_screening_id");
-
-                    b.Navigation("Indicator");
-
-                    b.Navigation("Screening");
-                });
-
-            modelBuilder.Entity("Models.DB.TEAScreening", b =>
-                {
-                    b.HasOne("Models.DB.User", "Evaluator")
-                        .WithMany()
-                        .HasForeignKey("EvaluatorId")
+                        .HasForeignKey("IndividualSubscriptionId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_tea_screening_user_evaluator_id");
+                        .HasConstraintName("fk_transaction_individual_subscription_individual_subscription");
 
-                    b.HasOne("Models.DB.SchoolYear", "SchoolYear")
+                    b.HasOne("Models.DB.PaymentMethod", "PaymentMethod")
                         .WithMany()
-                        .HasForeignKey("SchoolYearId")
+                        .HasForeignKey("PaymentMethodId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_tea_screening_school_year_school_year_id");
+                        .HasConstraintName("fk_transaction_payment_method_payment_method_id");
 
-                    b.HasOne("Models.DB.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_tea_screening_student_student_id");
+                    b.Navigation("AcademySubscription");
 
-                    b.Navigation("Evaluator");
+                    b.Navigation("IndividualSubscription");
 
-                    b.Navigation("SchoolYear");
-
-                    b.Navigation("Student");
+                    b.Navigation("PaymentMethod");
                 });
 
             modelBuilder.Entity("Models.DB.Tutor", b =>
@@ -3063,26 +1978,43 @@ namespace SIAEV2.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_tutor_student_student_id");
 
+                    b.HasOne("Models.DB.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_tutor_user_user_id");
+
                     b.Navigation("Student");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Models.DB.User", b =>
                 {
+                    b.HasOne("Models.DB.AcademySubscription", "AcademySubscription")
+                        .WithMany()
+                        .HasForeignKey("AcademySubscriptionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_user_academy_subscription_academy_subscription_id");
+
+                    b.HasOne("Models.DB.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_role_role_id");
+
                     b.HasOne("Models.DB.SchoolZone", "SchoolZone")
                         .WithMany()
                         .HasForeignKey("SchoolZoneId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_user_school_zone_school_zone_id");
 
-                    b.HasOne("Models.DB.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_user_student_student_id");
+                    b.Navigation("AcademySubscription");
+
+                    b.Navigation("Role");
 
                     b.Navigation("SchoolZone");
-
-                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("Models.DB.UserGroups", b =>

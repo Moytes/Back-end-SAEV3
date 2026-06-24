@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Dapper;
 using Data;
 using Microsoft.EntityFrameworkCore;
@@ -24,16 +24,16 @@ public class StudentSupportRepositorie : IStudentSupportRepositorie
 
     public async Task<IEnumerable<DisabilityCatalogItemDto>> GetDisabilityCatalog()
     {
-        return await _context.Disabilitie
+        return await _context.Disability
             .AsNoTracking()
-            .OrderBy(x => x.DisabilityCategory)
+            .OrderBy(x => x.Category)
             .ThenBy(x => x.Name)
             .Select(x => new DisabilityCatalogItemDto
             {
                 Id = x.Id,
                 CVE = x.CVE,
                 Name = x.Name,
-                DisabilityCategory = x.DisabilityCategory,
+                Category = x.Category,
                 Description = x.Description
             })
             .ToListAsync();
@@ -62,73 +62,72 @@ public class StudentSupportRepositorie : IStudentSupportRepositorie
                 sd.disability_id AS DisabilityId,
                 d.cve AS DisabilityCVE,
                 d.name AS DisabilityName,
-                d.disability_category AS DisabilityCategory,
+                d.category AS DisabilityCategory,
                 sd.school_year_id AS SchoolYearId,
                 sy.name AS SchoolYearName,
                 sd.external_diagnosis AS ExternalDiagnosis,
-                sd.file_url AS FileUrl,
+                sd.document_url AS DocumentUrl,
                 sd.notes
-            FROM "student_disabilitie" sd
-            INNER JOIN "disabilitie" d ON d.id = sd.disability_id
+            FROM "student_disability" sd
+            INNER JOIN "disability" d ON d.id = sd.disability_id
             INNER JOIN "school_year" sy ON sy.id = sd.school_year_id
             WHERE sd.student_id = @StudentId
-            ORDER BY sy.start_date DESC, d.disability_category, d.name;
+            ORDER BY sy.start_date DESC, d.category, d.name;
             """;
 
         return await _dbConnection.QueryAsync<StudentDisabilityItemDto>(sql, new { StudentId = studentId });
     }
 
-    public async Task<Result<Guid>> AddStudentDisability(Guid studentId, AddStudentDisabilityRequest request)
+    public async Task<Result<int>> AddStudentDisability(Guid studentId, AddStudentDisabilityRequest request)
     {
         var studentExists = await _context.Student.AnyAsync(x => x.Id == studentId);
         if (!studentExists)
-            return Result<Guid>.Failure(StudentErrors.StudentNotFound);
+            return Result<int>.Failure(StudentErrors.StudentNotFound);
 
-        var disability = await _context.Disabilitie
+        var disability = await _context.Disability
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == request.DisabilityId);
 
         if (disability == null)
-            return Result<Guid>.Failure(DisabilityErrors.DisabilityNotFound);
+            return Result<int>.Failure(DisabilityErrors.DisabilityNotFound);
 
         var schoolYearExists = await _context.SchoolYear.AnyAsync(x => x.Id == request.SchoolYearId);
         if (!schoolYearExists)
-            return Result<Guid>.Failure(SchoolErrors.SchoolYearNotFound);
+            return Result<int>.Failure(SchoolErrors.SchoolYearNotFound);
 
-        var alreadyExists = await _context.StudentDisabilitie.AnyAsync(x =>
+        var alreadyExists = await _context.StudentDisability.AnyAsync(x =>
             x.StudentId == studentId &&
             x.DisabilityId == request.DisabilityId &&
             x.SchoolYearId == request.SchoolYearId);
 
         if (alreadyExists)
-            return Result<Guid>.Failure(DisabilityErrors.StudentDisabilityAlreadyExists);
+            return Result<int>.Failure(DisabilityErrors.StudentDisabilityAlreadyExists);
 
         var entity = new StudentDisability
         {
-            Id = Guid.NewGuid(),
             StudentId = studentId,
             DisabilityId = request.DisabilityId,
             SchoolYearId = request.SchoolYearId,
             ExternalDiagnosis = request.ExternalDiagnosis,
-            FileUrl = request.FileUrl,
+            DocumentUrl = request.DocumentUrl,
             Notes = request.Notes
         };
 
-        await _context.StudentDisabilitie.AddAsync(entity);
+        await _context.StudentDisability.AddAsync(entity);
         await _context.SaveChangesAsync();
 
-        return Result<Guid>.Success(entity.Id);
+        return Result<int>.Success(entity.Id);
     }
 
-    public async Task<Result<List<Guid>>> AssignStudentAttentionAreas(Guid studentId, AssignStudentAttentionAreasRequest request)
+    public async Task<Result<List<int>>> AssignStudentAttentionAreas(Guid studentId, AssignStudentAttentionAreasRequest request)
     {
         var studentExists = await _context.Student.AnyAsync(x => x.Id == studentId);
         if (!studentExists)
-            return Result<List<Guid>>.Failure(StudentErrors.StudentNotFound);
+            return Result<List<int>>.Failure(StudentErrors.StudentNotFound);
 
         var schoolYearExists = await _context.SchoolYear.AnyAsync(x => x.Id == request.SchoolYearId);
         if (!schoolYearExists)
-            return Result<List<Guid>>.Failure(SchoolErrors.SchoolYearNotFound);
+            return Result<List<int>>.Failure(SchoolErrors.SchoolYearNotFound);
 
         var requestedAreaIds = request.Areas
             .Select(x => x.AttentionAreaId)
@@ -136,7 +135,7 @@ public class StudentSupportRepositorie : IStudentSupportRepositorie
             .ToList();
 
         if (requestedAreaIds.Count != request.Areas.Count)
-            return Result<List<Guid>>.Failure(AttentionAreaErrors.DuplicateAttentionAreasInRequest);
+            return Result<List<int>>.Failure(AttentionAreaErrors.DuplicateAttentionAreasInRequest);
 
         var existingAreaIds = await _context.AttentionArea
             .Where(x => requestedAreaIds.Contains(x.Id))
@@ -145,7 +144,7 @@ public class StudentSupportRepositorie : IStudentSupportRepositorie
 
         var missingAreaIds = requestedAreaIds.Except(existingAreaIds).ToList();
         if (missingAreaIds.Count > 0)
-            return Result<List<Guid>>.Failure(AttentionAreaErrors.AttentionAreaNotFound);
+            return Result<List<int>>.Failure(AttentionAreaErrors.AttentionAreaNotFound);
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -175,7 +174,6 @@ public class StudentSupportRepositorie : IStudentSupportRepositorie
             .Where(x => !existingIds.Contains(x.AttentionAreaId))
             .Select(x => new StudentAttentionAreas
             {
-                Id = Guid.NewGuid(),
                 StudentId = studentId,
                 AttentionAreaId = x.AttentionAreaId,
                 SchoolYearId = request.SchoolYearId,
@@ -196,18 +194,18 @@ public class StudentSupportRepositorie : IStudentSupportRepositorie
             .Concat(toInsert.Select(x => x.Id))
             .ToList();
 
-        return Result<List<Guid>>.Success(finalIds);
+        return Result<List<int>>.Success(finalIds);
     }
 
-    public async Task<Result<Guid>> AddAttentionMode(Guid studentId, AddAttentionModeRequest request)
+    public async Task<Result<int>> AddAttentionMode(Guid studentId, AddAttentionModeRequest request)
     {
         var studentExists = await _context.Student.AnyAsync(x => x.Id == studentId);
         if (!studentExists)
-            return Result<Guid>.Failure(StudentErrors.StudentNotFound);
+            return Result<int>.Failure(StudentErrors.StudentNotFound);
 
         var schoolYearExists = await _context.SchoolYear.AnyAsync(x => x.Id == request.SchoolYearId);
         if (!schoolYearExists)
-            return Result<Guid>.Failure(SchoolErrors.SchoolYearNotFound);
+            return Result<int>.Failure(SchoolErrors.SchoolYearNotFound);
 
         var alreadyExists = await _context.AttentionMode.AnyAsync(x =>
             x.StudentId == studentId &&
@@ -216,11 +214,10 @@ public class StudentSupportRepositorie : IStudentSupportRepositorie
             x.Type == request.Type);
 
         if (alreadyExists)
-            return Result<Guid>.Failure(AttentionModeErrors.AttentionModeAlreadyExists);
+            return Result<int>.Failure(AttentionModeErrors.AttentionModeAlreadyExists);
 
         var entity = new AttentionMode
         {
-            Id = Guid.NewGuid(),
             StudentId = studentId,
             SchoolYearId = request.SchoolYearId,
             Phase = request.Phase,
@@ -230,6 +227,6 @@ public class StudentSupportRepositorie : IStudentSupportRepositorie
         await _context.AttentionMode.AddAsync(entity);
         await _context.SaveChangesAsync();
 
-        return Result<Guid>.Success(entity.Id);
+        return Result<int>.Success(entity.Id);
     }
 }

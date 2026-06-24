@@ -1,15 +1,15 @@
-﻿using Models.DB;
+using Models.DB;
 
 namespace Models.Dto;
 
 public class NotificationItemDto
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public Guid UserId { get; set; }
-    public notificationType Type { get; set; }
+    public NotificationType Type { get; set; }
     public string Title { get; set; } = null!;
     public string? Message { get; set; }
-    public BoolStatus Read { get; set; }
+    public bool Read { get; set; }
     public string? DestinationUrl { get; set; }
     public DateTime CreatedAt { get; set; }
 }

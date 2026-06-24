@@ -1,20 +1,19 @@
 using System.ComponentModel.DataAnnotations;
-using Models.DB;
 
 namespace Models.Request;
 
 public class AddGroupRequest
 {
     [Required]
-    public Guid SchoolId { get; set; }
+    public int SchoolId { get; set; }
 
     [Required]
-    public Grades Grade { get; set; }
+    public int GradeId { get; set; }
 
     [Required]
-    [MaxLength(50)]
+    [MaxLength(1)]
     public string Section { get; set; } = "A";
 
     [Required]
-    public Guid SchoolYearId { get; set; }
+    public int SchoolYearId { get; set; }
 }

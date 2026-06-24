@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Models.DB;
 using Models.Request;
 using Repositories.IRepositories;
-using Services.IServices;
 using Utilities.Errors;
 
 namespace Controllers;
@@ -14,18 +12,10 @@ namespace Controllers;
 [Authorize]
 public class StudentSupportController(
     IStudentSupportRepositorie studentSupportRepositorie,
-    IStudentRepositorie studentRepositorie,
-    IServiceRepositorie serviceRepositorie) : ControllerBase
+    IStudentRepositorie studentRepositorie) : ControllerBase
 {
     private readonly IStudentSupportRepositorie _studentSupportRepositorie = studentSupportRepositorie;
     private readonly IStudentRepositorie _studentRepositorie = studentRepositorie;
-    private readonly IServiceRepositorie _serviceRepositorie = serviceRepositorie;
-
-    private Guid? GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
-    }
 
     [HttpGet("catalogos/discapacidades")]
     public async Task<IActionResult> GetDisabilityCatalog()
@@ -73,23 +63,6 @@ public class StudentSupportController(
             return BadRequest(result.error.Message);
         }
 
-        await _serviceRepositorie.AddLog(new AuditLog
-        {
-            UserId = GetCurrentUserId(),
-            Action = "CREATE",
-            AffectedTable = "student_disability",
-            RecordId = result.Value!.ToString(),
-            Request = System.Text.Json.JsonSerializer.Serialize(new
-            {
-                StudentId = id,
-                request.DisabilityId,
-                request.SchoolYearId,
-                request.ExternalDiagnosis,
-                request.FileUrl,
-                request.Notes
-            })
-        });
-
         return StatusCode(201, result.Value);
     }
 
@@ -114,20 +87,6 @@ public class StudentSupportController(
             return BadRequest(result.error.Message);
         }
 
-        await _serviceRepositorie.AddLog(new AuditLog
-        {
-            UserId = GetCurrentUserId(),
-            Action = "UPSERT",
-            AffectedTable = "student_attention_area",
-            RecordId = string.Join(",", result.Value!),
-            Request = System.Text.Json.JsonSerializer.Serialize(new
-            {
-                StudentId = id,
-                request.SchoolYearId,
-                request.Areas
-            })
-        });
-
         return Ok(result.Value);
     }
 
@@ -150,21 +109,6 @@ public class StudentSupportController(
 
             return BadRequest(result.error.Message);
         }
-
-        await _serviceRepositorie.AddLog(new AuditLog
-        {
-            UserId = GetCurrentUserId(),
-            Action = "CREATE",
-            AffectedTable = "attention_mode",
-            RecordId = result.Value!.ToString(),
-            Request = System.Text.Json.JsonSerializer.Serialize(new
-            {
-                StudentId = id,
-                request.SchoolYearId,
-                request.Phase,
-                request.Type
-            })
-        });
 
         return StatusCode(201, result.Value);
     }

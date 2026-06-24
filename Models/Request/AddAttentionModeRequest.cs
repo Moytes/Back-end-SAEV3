@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Models.DB;
 
 namespace Models.Request;
@@ -6,7 +6,7 @@ namespace Models.Request;
 public class AddAttentionModeRequest
 {
     [Required]
-    public Guid SchoolYearId { get; set; }
+    public int SchoolYearId { get; set; }
 
     [Required]
     public Phases Phase { get; set; }

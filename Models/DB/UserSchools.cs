@@ -1,18 +1,15 @@
-﻿namespace Models.DB;
+namespace Models.DB;
 
 public class UserSchools
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
 
-    // User
-    public User User { get; set; } = null!;
     public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
 
-    // School
+    public int SchoolId { get; set; }
     public School School { get; set; } = null!;
-    public Guid SchoolId { get; set; }
 
-    // School year
+    public int SchoolYearId { get; set; }
     public SchoolYear SchoolYear { get; set; } = null!;
-    public Guid SchoolYearId { get; set; }
 }

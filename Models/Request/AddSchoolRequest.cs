@@ -9,15 +9,20 @@ public class AddSchoolRequest
     [MaxLength(200)]
     public string Name { get; set; } = null!;
 
-    [Required]
     [MaxLength(20)]
-    public string CCT { get; set; } = null!;
+    public string? CCT { get; set; }
 
     [Required]
     public Turns Turn { get; set; }
 
     public string? Address { get; set; }
 
+    [MaxLength(20)]
+    public string? Phone { get; set; }
+
     [Required]
-    public Guid SchoolZoneId { get; set; }
+    public int EducationLevelId { get; set; }
+
+    public int? SchoolZoneId { get; set; }
+    public int? AcademySubscriptionId { get; set; }
 }

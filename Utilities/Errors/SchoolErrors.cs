@@ -15,4 +15,10 @@ public static class SchoolErrors
 
     public static readonly Error CctAlreadyExists =
         new("School.CctAlreadyExists", "A school with that CCT already exists.");
+
+    public static readonly Error EducationLevelNotFound =
+        new("School.EducationLevelNotFound", "Education level not found.");
+
+    public static readonly Error GradeNotFound =
+        new("School.GradeNotFound", "Grade not found.");
 }

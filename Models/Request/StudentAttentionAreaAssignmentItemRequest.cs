@@ -1,13 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Models.DB;
+using System.ComponentModel.DataAnnotations;
 
 namespace Models.Request;
 
 public class StudentAttentionAreaAssignmentItemRequest
 {
     [Required]
-    public Guid AttentionAreaId { get; set; }
+    public int AttentionAreaId { get; set; }
 
-    public BoolStatus IsRequired { get; set; } = BoolStatus.True;
+    public bool IsRequired { get; set; } = true;
     public string? Notes { get; set; }
 }

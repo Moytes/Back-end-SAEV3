@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Models.DB;
 
 namespace Data;
@@ -9,13 +9,24 @@ public class AppDbContext : DbContext
     {
     }
 
-    // Catálogos Base
+    // Suscripciones
+    public DbSet<SubscriptionPlan> SubscriptionPlan { get; set; }
+    public DbSet<AcademySubscription> AcademySubscription { get; set; }
+    public DbSet<IndividualSubscription> IndividualSubscription { get; set; }
+    public DbSet<PaymentMethod> PaymentMethod { get; set; }
+    public DbSet<Transaction> Transaction { get; set; }
+    public DbSet<Invoice> Invoice { get; set; }
+
+    // Estructura Académica
     public DbSet<SchoolYear> SchoolYear { get; set; }
+    public DbSet<EducationLevel> EducationLevel { get; set; }
+    public DbSet<Grade> Grade { get; set; }
     public DbSet<SchoolZone> SchoolZone { get; set; }
     public DbSet<School> School { get; set; }
     public DbSet<Group> Group { get; set; }
 
-    // Usuarios
+    // Usuarios y Roles
+    public DbSet<Role> Role { get; set; }
     public DbSet<User> User { get; set; }
     public DbSet<UserGroups> UserGroup { get; set; }
     public DbSet<UserSchools> UserSchool { get; set; }
@@ -25,53 +36,14 @@ public class AppDbContext : DbContext
     public DbSet<Tutor> Tutor { get; set; }
     public DbSet<Registration> Registration { get; set; }
 
-    // Catálogo de Discapacidades y BAP
-    public DbSet<Disability> Disabilitie { get; set; }
-    public DbSet<StudentDisability> StudentDisabilitie { get; set; }
-
-    // Áreas de Atención
+    // Catálogos
+    public DbSet<Disability> Disability { get; set; }
+    public DbSet<StudentDisability> StudentDisability { get; set; }
     public DbSet<AttentionArea> AttentionArea { get; set; }
     public DbSet<StudentAttentionAreas> StudentAttentionArea { get; set; }
-
-    // Modalidad de Atención
     public DbSet<AttentionMode> AttentionMode { get; set; }
 
-    // Canalizaciones
-    public DbSet<Canalization> Canalization { get; set; }
-
-    // Evaluaciones Psicopedagógicas
-    public DbSet<PsychoeducationalAssessment> PsychoeducationalAssessment { get; set; }
-    public DbSet<PsychoBAP> PsychoBAP { get; set; }
-    public DbSet<PsychoCollaborator> PsychoCollaborator { get; set; }
-
-    // Instrumento CIE - Comunicación
-    public DbSet<CIEDimension> CIEDimension { get; set; }
-    public DbSet<CIEIndicator> CIEIndicator { get; set; }
-    public DbSet<CIESubIndicator> CIESubIndicator { get; set; }
-    public DbSet<CIEEvaluation> CIEEvaluation { get; set; }
-    public DbSet<CIEAnswer> CIEAnswer { get; set; }
-    public DbSet<CIEPhonologyAnswer> CIEPhonologyAnswer { get; set; }
-
-    // Detección TEA
-    public DbSet<TEAIndicator> TEAIndicator { get; set; }
-    public DbSet<TEAScreening> TEAScreening { get; set; }
-    public DbSet<TEAAnswer> TEAAnswer { get; set; }
-
-    // Material Didáctico
-    public DbSet<MaterialType> MaterialType { get; set; }
-    public DbSet<Material> Material { get; set; }
-    public DbSet<MaterialTag> MaterialTag { get; set; }
-
-    // Asignaciones
-    public DbSet<Assignment> Assignment { get; set; }
-    public DbSet<AssignmentStudent> AssignmentStudent { get; set; }
-    // Diálogos
-    public DbSet<Dialog> Dialog { get; set; }
-    public DbSet<DialogProgress> DialogProgress { get; set; }
-
-    // Reportes y Sistema
-    public DbSet<Report> Report { get; set; }
-    public DbSet<AuditLog> AuditLog { get; set; }
+    // Notificaciones
     public DbSet<Notification> Notification { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -79,34 +51,201 @@ public class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         // ====================================================================
-        // CONFIGURACIÓN DE RELACIONES
+        // UNIQUE CONSTRAINTS
         // ====================================================================
 
-        // User relationships
+        modelBuilder.Entity<SubscriptionPlan>()
+            .HasIndex(sp => sp.Clave).IsUnique();
+
+        modelBuilder.Entity<EducationLevel>()
+            .HasIndex(el => el.Clave).IsUnique();
+
+        modelBuilder.Entity<EducationLevel>()
+            .HasIndex(el => el.Orden).IsUnique();
+
+        modelBuilder.Entity<Grade>()
+            .HasIndex(g => new { g.EducationLevelId, g.Numero }).IsUnique();
+
+        modelBuilder.Entity<SchoolZone>()
+            .HasIndex(sz => sz.CCT).IsUnique();
+
+        modelBuilder.Entity<School>()
+            .HasIndex(s => s.CCT).IsUnique();
+
+        modelBuilder.Entity<SchoolYear>()
+            .HasIndex(sy => sy.Name).IsUnique();
+
+        modelBuilder.Entity<Role>()
+            .HasIndex(r => r.Clave).IsUnique();
+
         modelBuilder.Entity<User>()
-            .HasOne(u => u.SchoolZone)
+            .HasIndex(u => u.Email).IsUnique();
+
+        modelBuilder.Entity<Student>()
+            .HasIndex(s => s.CURP).IsUnique();
+
+        modelBuilder.Entity<Student>()
+            .HasIndex(s => s.UserId).IsUnique();
+
+        modelBuilder.Entity<Invoice>()
+            .HasIndex(i => i.Folio).IsUnique();
+
+        modelBuilder.Entity<Group>()
+            .HasIndex(g => new { g.SchoolId, g.GradeId, g.Section, g.SchoolYearId }).IsUnique();
+
+        modelBuilder.Entity<UserGroups>()
+            .HasIndex(ug => new { ug.UserId, ug.GroupId, ug.SchoolYearId }).IsUnique();
+
+        modelBuilder.Entity<UserSchools>()
+            .HasIndex(us => new { us.UserId, us.SchoolId, us.SchoolYearId }).IsUnique();
+
+        modelBuilder.Entity<Registration>()
+            .HasIndex(r => new { r.StudentId, r.SchoolYearId }).IsUnique();
+
+        modelBuilder.Entity<StudentDisability>()
+            .HasIndex(sd => new { sd.StudentId, sd.DisabilityId, sd.SchoolYearId }).IsUnique();
+
+        modelBuilder.Entity<StudentAttentionAreas>()
+            .HasIndex(saa => new { saa.StudentId, saa.AttentionAreaId, saa.SchoolYearId }).IsUnique();
+
+        modelBuilder.Entity<AttentionMode>()
+            .HasIndex(am => new { am.StudentId, am.SchoolYearId, am.Phase, am.Type }).IsUnique();
+
+        // ====================================================================
+        // COLUMN CONFIGURATIONS
+        // ====================================================================
+
+        modelBuilder.Entity<SubscriptionPlan>(e =>
+        {
+            e.Property(sp => sp.PrecioMensual).HasPrecision(10, 2);
+            e.Property(sp => sp.PrecioAnual).HasPrecision(10, 2);
+            e.Property(sp => sp.Caracteristicas).HasColumnType("jsonb");
+        });
+
+        modelBuilder.Entity<Transaction>(e =>
+        {
+            e.Property(t => t.Monto).HasPrecision(10, 2);
+            e.Property(t => t.MetadataJson).HasColumnType("jsonb");
+            e.Property(t => t.Moneda).HasMaxLength(3);
+        });
+
+        modelBuilder.Entity<Invoice>(e =>
+        {
+            e.Property(i => i.Subtotal).HasPrecision(10, 2);
+            e.Property(i => i.IVA).HasPrecision(10, 2);
+            e.Property(i => i.Total).HasPrecision(10, 2);
+        });
+
+        modelBuilder.Entity<Role>()
+            .Property(r => r.Permisos).HasColumnType("jsonb");
+
+        modelBuilder.Entity<User>()
+            .Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
+
+        modelBuilder.Entity<Student>()
+            .Property(s => s.Id).HasDefaultValueSql("uuid_generate_v4()");
+
+        // ====================================================================
+        // RELATIONSHIPS
+        // ====================================================================
+
+        // AcademySubscription → SubscriptionPlan
+        modelBuilder.Entity<AcademySubscription>()
+            .HasOne(a => a.Plan)
             .WithMany()
-            .HasForeignKey(u => u.SchoolZoneId)
+            .HasForeignKey(a => a.PlanId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<User>()
-            .HasOne(u => u.Student)
+        // IndividualSubscription → SubscriptionPlan
+        modelBuilder.Entity<IndividualSubscription>()
+            .HasOne(i => i.Plan)
             .WithMany()
-            .HasForeignKey(u => u.StudentId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .HasForeignKey(i => i.PlanId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        // School relationships
+        // PaymentMethod → AcademySubscription / IndividualSubscription
+        modelBuilder.Entity<PaymentMethod>()
+            .HasOne(pm => pm.AcademySubscription)
+            .WithMany()
+            .HasForeignKey(pm => pm.AcademySubscriptionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PaymentMethod>()
+            .HasOne(pm => pm.IndividualSubscription)
+            .WithMany()
+            .HasForeignKey(pm => pm.IndividualSubscriptionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Transaction → AcademySubscription / IndividualSubscription / PaymentMethod
+        modelBuilder.Entity<Transaction>()
+            .HasOne(t => t.AcademySubscription)
+            .WithMany()
+            .HasForeignKey(t => t.AcademySubscriptionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Transaction>()
+            .HasOne(t => t.IndividualSubscription)
+            .WithMany()
+            .HasForeignKey(t => t.IndividualSubscriptionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Transaction>()
+            .HasOne(t => t.PaymentMethod)
+            .WithMany()
+            .HasForeignKey(t => t.PaymentMethodId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Invoice → Transaction
+        modelBuilder.Entity<Invoice>()
+            .HasOne(i => i.Transaction)
+            .WithMany()
+            .HasForeignKey(i => i.TransactionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Grade → EducationLevel
+        modelBuilder.Entity<Grade>()
+            .HasOne(g => g.EducationLevel)
+            .WithMany()
+            .HasForeignKey(g => g.EducationLevelId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // SchoolZone → AcademySubscription
+        modelBuilder.Entity<SchoolZone>()
+            .HasOne(sz => sz.AcademySubscription)
+            .WithMany()
+            .HasForeignKey(sz => sz.AcademySubscriptionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // School → SchoolZone, EducationLevel, AcademySubscription
         modelBuilder.Entity<School>()
             .HasOne(s => s.SchoolZone)
             .WithMany(z => z.Schools)
             .HasForeignKey(s => s.SchoolZoneId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Group relationships
+        modelBuilder.Entity<School>()
+            .HasOne(s => s.EducationLevel)
+            .WithMany()
+            .HasForeignKey(s => s.EducationLevelId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<School>()
+            .HasOne(s => s.AcademySubscription)
+            .WithMany()
+            .HasForeignKey(s => s.AcademySubscriptionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Group → School, Grade, SchoolYear
         modelBuilder.Entity<Group>()
             .HasOne(g => g.School)
             .WithMany()
             .HasForeignKey(g => g.SchoolId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Group>()
+            .HasOne(g => g.Grade)
+            .WithMany()
+            .HasForeignKey(g => g.GradeId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Group>()
@@ -115,7 +254,26 @@ public class AppDbContext : DbContext
             .HasForeignKey(g => g.SchoolYearId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // UserGroups relationships
+        // User → Role, SchoolZone, AcademySubscription
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Role)
+            .WithMany()
+            .HasForeignKey(u => u.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.SchoolZone)
+            .WithMany()
+            .HasForeignKey(u => u.SchoolZoneId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.AcademySubscription)
+            .WithMany()
+            .HasForeignKey(u => u.AcademySubscriptionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // UserGroups → User, Group, SchoolYear
         modelBuilder.Entity<UserGroups>()
             .HasOne(ug => ug.User)
             .WithMany()
@@ -134,7 +292,7 @@ public class AppDbContext : DbContext
             .HasForeignKey(ug => ug.SchoolYearId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // UserSchools relationships
+        // UserSchools → User, School, SchoolYear
         modelBuilder.Entity<UserSchools>()
             .HasOne(us => us.User)
             .WithMany()
@@ -153,14 +311,26 @@ public class AppDbContext : DbContext
             .HasForeignKey(us => us.SchoolYearId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Tutor relationships
+        modelBuilder.Entity<Student>()
+            .HasOne(s => s.User)
+            .WithMany()
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Tutor → Student, User
         modelBuilder.Entity<Tutor>()
             .HasOne(t => t.Student)
             .WithMany()
             .HasForeignKey(t => t.StudentId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Registration relationships
+        modelBuilder.Entity<Tutor>()
+            .HasOne(t => t.User)
+            .WithMany()
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Registration → Student, Group, SchoolYear
         modelBuilder.Entity<Registration>()
             .HasOne(r => r.Student)
             .WithMany()
@@ -179,7 +349,7 @@ public class AppDbContext : DbContext
             .HasForeignKey(r => r.SchoolYearId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // StudentDisability relationships
+        // StudentDisability → Student, Disability, SchoolYear
         modelBuilder.Entity<StudentDisability>()
             .HasOne(sd => sd.Student)
             .WithMany()
@@ -198,7 +368,7 @@ public class AppDbContext : DbContext
             .HasForeignKey(sd => sd.SchoolYearId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // StudentAttentionAreas relationships
+        // StudentAttentionAreas → Student, AttentionArea, SchoolYear
         modelBuilder.Entity<StudentAttentionAreas>()
             .HasOne(saa => saa.Student)
             .WithMany()
@@ -217,7 +387,7 @@ public class AppDbContext : DbContext
             .HasForeignKey(saa => saa.SchoolYearId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // AttentionMode relationships
+        // AttentionMode → Student, SchoolYear
         modelBuilder.Entity<AttentionMode>()
             .HasOne(am => am.Student)
             .WithMany()
@@ -230,284 +400,7 @@ public class AppDbContext : DbContext
             .HasForeignKey(am => am.SchoolYearId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Canalization relationships
-        modelBuilder.Entity<Canalization>()
-            .HasOne(c => c.Student)
-            .WithMany()
-            .HasForeignKey(c => c.StudentId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<Canalization>()
-            .HasOne(c => c.SchoolYear)
-            .WithMany()
-            .HasForeignKey(c => c.SchoolYearId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Canalization>()
-            .HasOne(c => c.AttentionArea)
-            .WithMany()
-            .HasForeignKey(c => c.AttentionAreaId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Canalization>()
-            .HasOne(c => c.Requester)
-            .WithMany()
-            .HasForeignKey(c => c.RequesterId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Canalization>()
-            .HasOne(c => c.Receiver)
-            .WithMany()
-            .HasForeignKey(c => c.ReceiverId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // PsychoeducationalAssessment relationships
-        modelBuilder.Entity<PsychoeducationalAssessment>()
-            .HasOne(pa => pa.Student)
-            .WithMany()
-            .HasForeignKey(pa => pa.StudentId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<PsychoeducationalAssessment>()
-            .HasOne(pa => pa.SchoolYear)
-            .WithMany()
-            .HasForeignKey(pa => pa.SchoolYearId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // PsychoBAP relationships
-        modelBuilder.Entity<PsychoBAP>()
-            .HasOne(pb => pb.PsychoeducationalAssessment)
-            .WithMany()
-            .HasForeignKey(pb => pb.PsychoeducationalAssessmentId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // PsychoCollaborator relationships
-        modelBuilder.Entity<PsychoCollaborator>()
-            .HasOne(pc => pc.PsychoeducationalAssessment)
-            .WithMany()
-            .HasForeignKey(pc => pc.PsychoeducationalAssessmentId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<PsychoCollaborator>()
-            .HasOne(pc => pc.User)
-            .WithMany()
-            .HasForeignKey(pc => pc.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // CIEIndicator relationships
-        modelBuilder.Entity<CIEIndicator>()
-            .HasOne(ci => ci.Dimension)
-            .WithMany()
-            .HasForeignKey(ci => ci.DimensionId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // CIESubIndicator relationships
-        modelBuilder.Entity<CIESubIndicator>()
-            .HasOne(csi => csi.Indicator)
-            .WithMany()
-            .HasForeignKey(csi => csi.IndicatorId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // CIEEvaluation relationships
-        modelBuilder.Entity<CIEEvaluation>()
-            .HasOne(ce => ce.Student)
-            .WithMany()
-            .HasForeignKey(ce => ce.StudentId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<CIEEvaluation>()
-            .HasOne(ce => ce.Evaluator)
-            .WithMany()
-            .HasForeignKey(ce => ce.EvaluatorId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<CIEEvaluation>()
-            .HasOne(ce => ce.SchoolYear)
-            .WithMany()
-            .HasForeignKey(ce => ce.SchoolYearId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<CIEEvaluation>()
-            .HasOne(ce => ce.Dimension)
-            .WithMany()
-            .HasForeignKey(ce => ce.DimensionId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // CIEAnswer relationships
-        modelBuilder.Entity<CIEAnswer>()
-            .HasOne(ca => ca.Evaluation)
-            .WithMany()
-            .HasForeignKey(ca => ca.EvaluationId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<CIEAnswer>()
-            .HasOne(ca => ca.SubIndicator)
-            .WithMany()
-            .HasForeignKey(ca => ca.SubIndicatorId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // CIEPhonologyAnswer relationships
-        modelBuilder.Entity<CIEPhonologyAnswer>()
-            .HasOne(cpa => cpa.Evaluation)
-            .WithMany()
-            .HasForeignKey(cpa => cpa.EvaluationId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<CIEPhonologyAnswer>()
-            .HasOne(cpa => cpa.SubIndicator)
-            .WithMany()
-            .HasForeignKey(cpa => cpa.SubIndicatorId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // TEAScreening relationships
-        modelBuilder.Entity<TEAScreening>()
-            .HasOne(ts => ts.Student)
-            .WithMany()
-            .HasForeignKey(ts => ts.StudentId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<TEAScreening>()
-            .HasOne(ts => ts.Evaluator)
-            .WithMany()
-            .HasForeignKey(ts => ts.EvaluatorId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<TEAScreening>()
-            .HasOne(ts => ts.SchoolYear)
-            .WithMany()
-            .HasForeignKey(ts => ts.SchoolYearId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // TEAAnswer relationships
-        modelBuilder.Entity<TEAAnswer>()
-            .HasOne(ta => ta.Screening)
-            .WithMany()
-            .HasForeignKey(ta => ta.ScreeningId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<TEAAnswer>()
-            .HasOne(ta => ta.Indicator)
-            .WithMany()
-            .HasForeignKey(ta => ta.IndicatorId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // Material relationships
-        modelBuilder.Entity<Material>()
-            .HasOne(m => m.Creator)
-            .WithMany()
-            .HasForeignKey(m => m.CreatorId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Material>()
-            .HasOne(m => m.MaterialType)
-            .WithMany()
-            .HasForeignKey(m => m.MaterialTypeId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Material>()
-            .HasOne(m => m.Dimension)
-            .WithMany()
-            .HasForeignKey(m => m.DimensionId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // MaterialTag relationships
-        modelBuilder.Entity<MaterialTag>()
-            .HasOne(mt => mt.Material)
-            .WithMany()
-            .HasForeignKey(mt => mt.MaterialId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // Assignment relationships
-        modelBuilder.Entity<Assignment>()
-            .HasOne(a => a.Material)
-            .WithMany()
-            .HasForeignKey(a => a.MaterialId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Assignment>()
-            .HasOne(a => a.AssignedBy)
-            .WithMany()
-            .HasForeignKey(a => a.AssignedById)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Assignment>()
-            .HasOne(a => a.SchoolYear)
-            .WithMany()
-            .HasForeignKey(a => a.SchoolYearId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // AssignmentStudent relationships
-        modelBuilder.Entity<AssignmentStudent>()
-            .HasOne(ast => ast.Assignment)
-            .WithMany()
-            .HasForeignKey(ast => ast.AssignmentId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<AssignmentStudent>()
-            .HasOne(ast => ast.Student)
-            .WithMany()
-            .HasForeignKey(ast => ast.StudentId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<AssignmentStudent>()
-            .HasOne(ast => ast.EvaluatedBy)
-            .WithMany()
-            .HasForeignKey(ast => ast.EvaluatedById)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // Dialog relationships
-        modelBuilder.Entity<Dialog>()
-            .HasOne(d => d.Material)
-            .WithMany()
-            .HasForeignKey(d => d.MaterialId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // DialogProgress relationships
-        modelBuilder.Entity<DialogProgress>()
-            .HasOne(dp => dp.Dialog)
-            .WithMany()
-            .HasForeignKey(dp => dp.DialogId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<DialogProgress>()
-            .HasOne(dp => dp.Student)
-            .WithMany()
-            .HasForeignKey(dp => dp.StudentId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // Report relationships
-        modelBuilder.Entity<Report>()
-            .HasOne(r => r.Student)
-            .WithMany()
-            .HasForeignKey(r => r.StudentId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Report>()
-            .HasOne(r => r.Group)
-            .WithMany()
-            .HasForeignKey(r => r.GroupId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Report>()
-            .HasOne(r => r.SchoolYear)
-            .WithMany()
-            .HasForeignKey(r => r.SchoolYearId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Report>()
-            .HasOne(r => r.GeneratedBy)
-            .WithMany()
-            .HasForeignKey(r => r.GeneratedById)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // AuditLog relationships
-        modelBuilder.Entity<AuditLog>()
-            .HasOne(al => al.User)
-            .WithMany()
-            .HasForeignKey(al => al.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // Notification relationships
+        // Notification → User
         modelBuilder.Entity<Notification>()
             .HasOne(n => n.User)
             .WithMany()
@@ -515,185 +408,103 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         // ====================================================================
-        // SEEDING DE DATOS
+        // SEED DATA
         // ====================================================================
 
-        // Seed: Disabilities
+        SeedEducationLevels(modelBuilder);
+        SeedGrades(modelBuilder);
+        SeedRoles(modelBuilder);
         SeedDisabilities(modelBuilder);
-
-        // Seed: Attention Areas
         SeedAttentionAreas(modelBuilder);
-
-        // Seed: Material Types
-        SeedMaterialTypes(modelBuilder);
-
-        // Seed: CIE Dimensions
-        SeedCIEDimensions(modelBuilder);
-
-        // Seed: CIE Indicators (Fonología)
-        SeedCIEIndicators(modelBuilder);
-
-        // Seed: CIE SubIndicators (Fonología)
-        SeedCIESubIndicators(modelBuilder);
-
-        // Seed: TEA Indicators
-        SeedTEAIndicators(modelBuilder);
-
-        // Seed: Users
-        SeedUsers(modelBuilder);
+        SeedAdminUser(modelBuilder);
     }
 
-    // ====================================================================
-    // MÉTODOS DE SEEDING
-    // ====================================================================
+    private void SeedEducationLevels(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EducationLevel>().HasData(
+            new EducationLevel { Id = 1, Clave = "PREESCOLAR", Nombre = "Preescolar", Orden = 1 },
+            new EducationLevel { Id = 2, Clave = "PRIMARIA", Nombre = "Primaria", Orden = 2 },
+            new EducationLevel { Id = 3, Clave = "SECUNDARIA", Nombre = "Secundaria", Orden = 3 },
+            new EducationLevel { Id = 4, Clave = "PREPARATORIA", Nombre = "Preparatoria", Orden = 4 }
+        );
+    }
+
+    private void SeedGrades(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Grade>().HasData(
+            // Preescolar
+            new Grade { Id = 1, EducationLevelId = 1, Numero = 1, Nombre = "Primero" },
+            new Grade { Id = 2, EducationLevelId = 1, Numero = 2, Nombre = "Segundo" },
+            new Grade { Id = 3, EducationLevelId = 1, Numero = 3, Nombre = "Tercero" },
+            // Primaria
+            new Grade { Id = 4, EducationLevelId = 2, Numero = 1, Nombre = "Primero" },
+            new Grade { Id = 5, EducationLevelId = 2, Numero = 2, Nombre = "Segundo" },
+            new Grade { Id = 6, EducationLevelId = 2, Numero = 3, Nombre = "Tercero" },
+            new Grade { Id = 7, EducationLevelId = 2, Numero = 4, Nombre = "Cuarto" },
+            new Grade { Id = 8, EducationLevelId = 2, Numero = 5, Nombre = "Quinto" },
+            new Grade { Id = 9, EducationLevelId = 2, Numero = 6, Nombre = "Sexto" },
+            // Secundaria
+            new Grade { Id = 10, EducationLevelId = 3, Numero = 1, Nombre = "Primero" },
+            new Grade { Id = 11, EducationLevelId = 3, Numero = 2, Nombre = "Segundo" },
+            new Grade { Id = 12, EducationLevelId = 3, Numero = 3, Nombre = "Tercero" },
+            // Preparatoria
+            new Grade { Id = 13, EducationLevelId = 4, Numero = 1, Nombre = "Primer semestre" },
+            new Grade { Id = 14, EducationLevelId = 4, Numero = 2, Nombre = "Segundo semestre" },
+            new Grade { Id = 15, EducationLevelId = 4, Numero = 3, Nombre = "Tercer semestre" },
+            new Grade { Id = 16, EducationLevelId = 4, Numero = 4, Nombre = "Cuarto semestre" },
+            new Grade { Id = 17, EducationLevelId = 4, Numero = 5, Nombre = "Quinto semestre" },
+            new Grade { Id = 18, EducationLevelId = 4, Numero = 6, Nombre = "Sexto semestre" }
+        );
+    }
+
+    private void SeedRoles(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Role>().HasData(
+            new Role { Id = 1, Clave = "ADMIN", Nombre = "Administrador del sistema" },
+            new Role { Id = 2, Clave = "SUPERVISOR", Nombre = "Supervisor de zona" },
+            new Role { Id = 3, Clave = "DIRECTOR_USAER", Nombre = "Director de USAER" },
+            new Role { Id = 4, Clave = "ESPECIALISTA_COM", Nombre = "Especialista en Comunicación" },
+            new Role { Id = 5, Clave = "ESPECIALISTA_PSI", Nombre = "Especialista en Psicología" },
+            new Role { Id = 6, Clave = "ESPECIALISTA_APR", Nombre = "Especialista en Aprendizaje" },
+            new Role { Id = 7, Clave = "TRABAJO_SOCIAL", Nombre = "Trabajo Social" },
+            new Role { Id = 8, Clave = "DOCENTE", Nombre = "Docente de grupo regular" },
+            new Role { Id = 9, Clave = "TUTOR", Nombre = "Padre / tutor" },
+            new Role { Id = 10, Clave = "ALUMNO", Nombre = "Alumno (autoservicio)" }
+        );
+    }
 
     private void SeedDisabilities(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Disability>().HasData(
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), CVE = "INTELECTUAL", Name = "Discapacidad Intelectual", DisabilityCategory = disabilitiesCategory.DISCAPACIDAD },
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-000000000002"), CVE = "MOTRIZ", Name = "Discapacidad Motriz", DisabilityCategory = disabilitiesCategory.DISCAPACIDAD },
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-000000000003"), CVE = "SORDERA", Name = "Sordera", DisabilityCategory = disabilitiesCategory.DISCAPACIDAD },
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-000000000004"), CVE = "HIPOACUSIA", Name = "Hipoacusia", DisabilityCategory = disabilitiesCategory.DISCAPACIDAD },
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-000000000005"), CVE = "CEGUERA", Name = "Ceguera", DisabilityCategory = disabilitiesCategory.DISCAPACIDAD },
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-000000000006"), CVE = "BAJA_VISION", Name = "Baja Visión", DisabilityCategory = disabilitiesCategory.DISCAPACIDAD },
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-000000000007"), CVE = "MULTIPLE", Name = "Discapacidad Múltiple", DisabilityCategory = disabilitiesCategory.DISCAPACIDAD },
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-000000000008"), CVE = "SORDOCEGUERA", Name = "Sordoceguera", DisabilityCategory = disabilitiesCategory.DISCAPACIDAD },
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-000000000009"), CVE = "TEA", Name = "Trastorno del Espectro Autista", DisabilityCategory = disabilitiesCategory.DISCAPACIDAD },
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-00000000000A"), CVE = "TDAH", Name = "TDAH", DisabilityCategory = disabilitiesCategory.BAP },
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-00000000000B"), CVE = "APRENDIZAJE", Name = "Barreras de Aprendizaje", DisabilityCategory = disabilitiesCategory.BAP },
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-00000000000C"), CVE = "COMUNICACION", Name = "Barreras de Comunicación", DisabilityCategory = disabilitiesCategory.BAP },
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-00000000000D"), CVE = "CONDUCTA", Name = "Barreras de Conducta", DisabilityCategory = disabilitiesCategory.BAP },
-            new Disability { Id = Guid.Parse("00000000-0000-0000-0000-00000000000E"), CVE = "AS", Name = "Aptitudes Sobresalientes", DisabilityCategory = disabilitiesCategory.AS }
+            new Disability { Id = 1, CVE = "INTELECTUAL", Name = "Discapacidad Intelectual", Category = DisabilityCategory.DISCAPACIDAD },
+            new Disability { Id = 2, CVE = "MOTRIZ", Name = "Discapacidad Motriz", Category = DisabilityCategory.DISCAPACIDAD },
+            new Disability { Id = 3, CVE = "SORDERA", Name = "Sordera", Category = DisabilityCategory.DISCAPACIDAD },
+            new Disability { Id = 4, CVE = "HIPOACUSIA", Name = "Hipoacusia", Category = DisabilityCategory.DISCAPACIDAD },
+            new Disability { Id = 5, CVE = "CEGUERA", Name = "Ceguera", Category = DisabilityCategory.DISCAPACIDAD },
+            new Disability { Id = 6, CVE = "BAJA_VISION", Name = "Baja Visión", Category = DisabilityCategory.DISCAPACIDAD },
+            new Disability { Id = 7, CVE = "MULTIPLE", Name = "Discapacidad Múltiple", Category = DisabilityCategory.DISCAPACIDAD },
+            new Disability { Id = 8, CVE = "SORDOCEGUERA", Name = "Sordoceguera", Category = DisabilityCategory.DISCAPACIDAD },
+            new Disability { Id = 9, CVE = "TEA", Name = "Trastorno del Espectro Autista", Category = DisabilityCategory.DISCAPACIDAD },
+            new Disability { Id = 10, CVE = "TDAH", Name = "TDAH", Category = DisabilityCategory.BAP },
+            new Disability { Id = 11, CVE = "APRENDIZAJE", Name = "Barreras de Aprendizaje", Category = DisabilityCategory.BAP },
+            new Disability { Id = 12, CVE = "COMUNICACION", Name = "Barreras de Comunicación", Category = DisabilityCategory.BAP },
+            new Disability { Id = 13, CVE = "CONDUCTA", Name = "Barreras de Conducta", Category = DisabilityCategory.BAP },
+            new Disability { Id = 14, CVE = "AS", Name = "Aptitudes Sobresalientes", Category = DisabilityCategory.AS }
         );
     }
 
     private void SeedAttentionAreas(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AttentionArea>().HasData(
-            new AttentionArea { Id = Guid.Parse("10000000-0000-0000-0000-000000000001"), CVE = "APRENDIZAJE", Name = "Aprendizaje" },
-            new AttentionArea { Id = Guid.Parse("10000000-0000-0000-0000-000000000002"), CVE = "PSICOLOGIA", Name = "Psicología" },
-            new AttentionArea { Id = Guid.Parse("10000000-0000-0000-0000-000000000003"), CVE = "COMUNICACION", Name = "Comunicación" },
-            new AttentionArea { Id = Guid.Parse("10000000-0000-0000-0000-000000000004"), CVE = "TRABAJO_SOCIAL", Name = "Trabajo Social" }
+            new AttentionArea { Id = 1, CVE = "APRENDIZAJE", Name = "Aprendizaje" },
+            new AttentionArea { Id = 2, CVE = "PSICOLOGIA", Name = "Psicología" },
+            new AttentionArea { Id = 3, CVE = "COMUNICACION", Name = "Comunicación" },
+            new AttentionArea { Id = 4, CVE = "TRABAJO_SOCIAL", Name = "Trabajo Social" }
         );
     }
 
-    private void SeedMaterialTypes(ModelBuilder modelBuilder)
+    private void SeedAdminUser(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<MaterialType>().HasData(
-            new MaterialType { Id = Guid.Parse("20000000-0000-0000-0000-000000000001"), CVE = "DIALOGO_ANIMADO", Name = "Diálogo animado interactivo" },
-            new MaterialType { Id = Guid.Parse("20000000-0000-0000-0000-000000000002"), CVE = "ACTIVIDAD", Name = "Actividad didáctica" },
-            new MaterialType { Id = Guid.Parse("20000000-0000-0000-0000-000000000003"), CVE = "JUEGO_DIGITAL", Name = "Juego digital educativo" },
-            new MaterialType { Id = Guid.Parse("20000000-0000-0000-0000-000000000004"), CVE = "IMAGEN", Name = "Material visual / imagen" },
-            new MaterialType { Id = Guid.Parse("20000000-0000-0000-0000-000000000005"), CVE = "AUDIO", Name = "Material de audio" },
-            new MaterialType { Id = Guid.Parse("20000000-0000-0000-0000-000000000006"), CVE = "VIDEO", Name = "Video educativo" },
-            new MaterialType { Id = Guid.Parse("20000000-0000-0000-0000-000000000007"), CVE = "DOCUMENTO", Name = "Documento / ficha de trabajo" }
-        );
-    }
-
-    private void SeedCIEDimensions(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<CIEDimension>().HasData(
-            new CIEDimension { Id = Guid.Parse("30000000-0000-0000-0000-000000000001"), CVE = "FONOLOGIA", Name = "Fonología", ColorHex = "#FF6B6B", Order = 1 },
-            new CIEDimension { Id = Guid.Parse("30000000-0000-0000-0000-000000000002"), CVE = "SEMANTICA", Name = "Semántica (Contenido)", ColorHex = "#4ECDC4", Order = 2 },
-            new CIEDimension { Id = Guid.Parse("30000000-0000-0000-0000-000000000003"), CVE = "PRAGMATICA", Name = "Pragmática (Uso)", ColorHex = "#45B7D1", Order = 3 },
-            new CIEDimension { Id = Guid.Parse("30000000-0000-0000-0000-000000000004"), CVE = "MORFOSINTAXIS", Name = "Morfosintaxis (Forma)", ColorHex = "#96CEB4", Order = 4 },
-            new CIEDimension { Id = Guid.Parse("30000000-0000-0000-0000-000000000005"), CVE = "DISCURSO_ORAL", Name = "Discursos Orales", ColorHex = "#FFEAA7", Order = 5 },
-            new CIEDimension { Id = Guid.Parse("30000000-0000-0000-0000-000000000006"), CVE = "JUEGO", Name = "Juego", ColorHex = "#DDA0DD", Order = 6 }
-        );
-    }
-
-    private void SeedCIEIndicators(ModelBuilder modelBuilder)
-    {
-        var fonologiaId = Guid.Parse("30000000-0000-0000-0000-000000000001");
-
-        modelBuilder.Entity<CIEIndicator>().HasData(
-            new CIEIndicator { Id = Guid.Parse("31000000-0000-0000-0000-000000000001"), DimensionId = fonologiaId, Code = "FON_VOC", Name = "Realiza vocalizaciones", Order = 1 },
-            new CIEIndicator { Id = Guid.Parse("31000000-0000-0000-0000-000000000002"), DimensionId = fonologiaId, Code = "FON_PAL", Name = "Produce palabras con:", Order = 2 },
-            new CIEIndicator { Id = Guid.Parse("31000000-0000-0000-0000-000000000003"), DimensionId = fonologiaId, Code = "FON_PTO", Name = "Punto de articulación", Order = 3 },
-            new CIEIndicator { Id = Guid.Parse("31000000-0000-0000-0000-000000000004"), DimensionId = fonologiaId, Code = "FON_SIT", Name = "Situación fonológica", Order = 4 },
-            new CIEIndicator { Id = Guid.Parse("31000000-0000-0000-0000-000000000005"), DimensionId = fonologiaId, Code = "FON_APA", Name = "Aparato fonoarticulador", Order = 5 }
-        );
-    }
-
-    private void SeedCIESubIndicators(ModelBuilder modelBuilder)
-    {
-        // Sub-indicadores para FON_VOC
-        modelBuilder.Entity<CIESubIndicator>().HasData(
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000001"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000001"), Code = "FON_VOC_A", Name = "Con intención comunicativa", Order = 1 }
-        );
-
-        // Sub-indicadores para FON_PAL
-        modelBuilder.Entity<CIESubIndicator>().HasData(
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000002"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000002"), Code = "FON_PAL_A", Name = "Una sílaba", Order = 1 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000003"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000002"), Code = "FON_PAL_B", Name = "Dos sílabas", Order = 2 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000004"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000002"), Code = "FON_PAL_C", Name = "Heterosilábicas", Order = 3 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000005"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000002"), Code = "FON_PAL_D", Name = "Homosilábicas: /r/: tr, br, kr, gr; /l/: bl, pl, kl, fl", Order = 4 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000006"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000002"), Code = "FON_PAL_E", Name = "Combinaciones: /mbr/, /str/", Order = 5 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000007"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000002"), Code = "FON_PAL_F", Name = "Diptongos", Order = 6 }
-        );
-
-        // Sub-indicadores para FON_PTO (Punto de articulación)
-        modelBuilder.Entity<CIESubIndicator>().HasData(
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000008"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000003"), Code = "FON_PTO_A", Name = "Vocales (SI al producir 3/5 o más)", Order = 1 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000009"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000003"), Code = "FON_PTO_B", Name = "Velares /k/, /g/, /j/", Order = 2 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-00000000000A"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000003"), Code = "FON_PTO_C", Name = "Bilabiales /p/, /b/, /m/", Order = 3 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-00000000000B"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000003"), Code = "FON_PTO_D", Name = "Alveolares /s/, /l/, /r/, /n/", Order = 4 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-00000000000C"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000003"), Code = "FON_PTO_E", Name = "Palatales /ch/, /ll/, /ñ/", Order = 5 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-00000000000D"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000003"), Code = "FON_PTO_F", Name = "Dentales /d/, /t/", Order = 6 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-00000000000E"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000003"), Code = "FON_PTO_G", Name = "Labiodentales /f/", Order = 7 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-00000000000F"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000003"), Code = "FON_PTO_H", Name = "Laterales /l/", Order = 8 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000010"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000003"), Code = "FON_PTO_I", Name = "Vibrantes /r/, /ṝ/", Order = 9 }
-        );
-
-        // Sub-indicadores para FON_SIT (Situación fonológica)
-        modelBuilder.Entity<CIESubIndicator>().HasData(
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000011"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000004"), Code = "FON_SIT_A", Name = "Habla sin omisiones", Order = 1 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000012"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000004"), Code = "FON_SIT_B", Name = "Habla sin adiciones", Order = 2 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000013"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000004"), Code = "FON_SIT_C", Name = "Habla sin sustituciones", Order = 3 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000014"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000004"), Code = "FON_SIT_D", Name = "Habla sin distorsiones", Order = 4 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000015"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000004"), Code = "FON_SIT_E", Name = "Habla sin alteraciones globales", Order = 5 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000016"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000004"), Code = "FON_SIT_F", Name = "Habla sin reducción silábica", Order = 6 }
-        );
-
-        // Sub-indicadores para FON_APA (Aparato fonoarticulador)
-        modelBuilder.Entity<CIESubIndicator>().HasData(
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000017"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000005"), Code = "FON_APA_LENGUA", Name = "Lengua", Order = 1 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000018"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000005"), Code = "FON_APA_FRENILLO", Name = "Frenillo lingual", Order = 2 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-000000000019"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000005"), Code = "FON_APA_LABIOS", Name = "Labios", Order = 3 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-00000000001A"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000005"), Code = "FON_APA_MANDIBULA", Name = "Mandíbula", Order = 4 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-00000000001B"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000005"), Code = "FON_APA_MEJILLAS", Name = "Mejillas", Order = 5 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-00000000001C"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000005"), Code = "FON_APA_DIENTES", Name = "Dientes", Order = 6 },
-            new CIESubIndicator { Id = Guid.Parse("32000000-0000-0000-0000-00000000001D"), IndicatorId = Guid.Parse("31000000-0000-0000-0000-000000000005"), Code = "FON_APA_PALADAR", Name = "Paladar duro y velo", Order = 7 }
-        );
-    }
-
-    private void SeedTEAIndicators(ModelBuilder modelBuilder)
-    {
-        // Indicadores de Comunicación Social
-        modelBuilder.Entity<TEAIndicator>().HasData(
-            new TEAIndicator { Id = Guid.Parse("40000000-0000-0000-0000-000000000001"), Domain = teaDomain.COMUNICACION_SOCIAL, Code = "TEA_CS_01", Description = "Dificultad para iniciar o mantener conversaciones", AgeRangeMin = 72, AgeRangeMax = 144, Order = 1 },
-            new TEAIndicator { Id = Guid.Parse("40000000-0000-0000-0000-000000000002"), Domain = teaDomain.COMUNICACION_SOCIAL, Code = "TEA_CS_02", Description = "Respuestas inusuales en interacciones sociales", AgeRangeMin = 72, AgeRangeMax = 144, Order = 2 },
-            new TEAIndicator { Id = Guid.Parse("40000000-0000-0000-0000-000000000003"), Domain = teaDomain.COMUNICACION_SOCIAL, Code = "TEA_CS_03", Description = "Contacto visual limitado o atípico", AgeRangeMin = 72, AgeRangeMax = 144, Order = 3 },
-            new TEAIndicator { Id = Guid.Parse("40000000-0000-0000-0000-000000000004"), Domain = teaDomain.COMUNICACION_SOCIAL, Code = "TEA_CS_04", Description = "Dificultad para comprender lenguaje no literal (ironía, chistes)", AgeRangeMin = 72, AgeRangeMax = 144, Order = 4 },
-            new TEAIndicator { Id = Guid.Parse("40000000-0000-0000-0000-000000000005"), Domain = teaDomain.COMUNICACION_SOCIAL, Code = "TEA_CS_05", Description = "Dificultad para hacer amigos o mantener relaciones", AgeRangeMin = 72, AgeRangeMax = 144, Order = 5 },
-            new TEAIndicator { Id = Guid.Parse("40000000-0000-0000-0000-000000000006"), Domain = teaDomain.COMUNICACION_SOCIAL, Code = "TEA_CS_06", Description = "Expresión emocional limitada o inadecuada al contexto", AgeRangeMin = 72, AgeRangeMax = 144, Order = 6 },
-            new TEAIndicator { Id = Guid.Parse("40000000-0000-0000-0000-000000000007"), Domain = teaDomain.COMUNICACION_SOCIAL, Code = "TEA_CS_07", Description = "Dificultad para tomar turnos en la conversación", AgeRangeMin = 72, AgeRangeMax = 144, Order = 7 },
-            new TEAIndicator { Id = Guid.Parse("40000000-0000-0000-0000-000000000008"), Domain = teaDomain.COMUNICACION_SOCIAL, Code = "TEA_CS_08", Description = "Prosodia inusual (tono monótono, volumen inadecuado)", AgeRangeMin = 72, AgeRangeMax = 144, Order = 8 }
-        );
-
-        // Indicadores de Conducta Repetitiva
-        modelBuilder.Entity<TEAIndicator>().HasData(
-            new TEAIndicator { Id = Guid.Parse("40000000-0000-0000-0000-000000000009"), Domain = teaDomain.CONDUCTA_REPETITIVA, Code = "TEA_CR_01", Description = "Intereses intensos y restringidos", AgeRangeMin = 72, AgeRangeMax = 144, Order = 1 },
-            new TEAIndicator { Id = Guid.Parse("40000000-0000-0000-0000-00000000000A"), Domain = teaDomain.CONDUCTA_REPETITIVA, Code = "TEA_CR_02", Description = "Inflexibilidad ante cambios de rutina", AgeRangeMin = 72, AgeRangeMax = 144, Order = 2 },
-            new TEAIndicator { Id = Guid.Parse("40000000-0000-0000-0000-00000000000B"), Domain = teaDomain.CONDUCTA_REPETITIVA, Code = "TEA_CR_03", Description = "Movimientos repetitivos o estereotipados", AgeRangeMin = 72, AgeRangeMax = 144, Order = 3 },
-            new TEAIndicator { Id = Guid.Parse("40000000-0000-0000-0000-00000000000C"), Domain = teaDomain.CONDUCTA_REPETITIVA, Code = "TEA_CR_04", Description = "Hiper o hipo reactividad sensorial", AgeRangeMin = 72, AgeRangeMax = 144, Order = 4 },
-            new TEAIndicator { Id = Guid.Parse("40000000-0000-0000-0000-00000000000D"), Domain = teaDomain.CONDUCTA_REPETITIVA, Code = "TEA_CR_05", Description = "Adherencia excesiva a reglas o patrones", AgeRangeMin = 72, AgeRangeMax = 144, Order = 5 }
-        );
-    }
-
-    private void SeedUsers(ModelBuilder modelBuilder)
-    {
-        // Definimos la fecha una sola vez para que coincida exactamente
         DateTime seedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         modelBuilder.Entity<User>().HasData(
@@ -701,12 +512,12 @@ public class AppDbContext : DbContext
             {
                 Id = Guid.Parse("50000000-0000-0000-0000-000000000001"),
                 Name = "Admin",
-                FatherLastName = "Admin",
+                FatherLastName = "Sistema",
                 Email = "admin@system.com",
-                // contraseña: Admin123!
                 PasswordHash = "cTZfg3WXU8h6n6cVkemLpgFsbETdN1tsoL3dVM10HuM=",
                 PasswordSalt = "322JhrUxDTVzC5KijDL+FlE+Zk22My5MRBC89R8noN4=",
-                Role = UserRole.ADMIN,
+                RoleId = 1,
+                Activo = true,
                 CreatedAt = seedDate,
                 UpdatedAt = seedDate
             }

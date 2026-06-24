@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Models.DB;
 
 namespace Models.Request;
@@ -17,7 +17,7 @@ public class AddStudentRequest
     public string? MotherLastName { get; set; }
 
     [Required]
-    public Gender Gender { get; set; }
+    public Sexo Sexo { get; set; }
 
     [Required]
     public DateOnly BirthDate { get; set; }

@@ -1,6 +1,7 @@
 using Dapper;
 using Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
@@ -16,28 +17,35 @@ using Utilities.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 // ====================================================================
 // CONFIGURACIÓN DE BASE DE DATOS
 // ====================================================================
 
-// Obtener connection string
 var connectionString = builder.Configuration.GetConnectionString("SupabaseConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+    ?? throw new InvalidOperationException("Connection string 'SupabaseConnection' not found.");
+connectionString = BuildPostgresConnectionString(connectionString);
 
-// Configurar Entity Framework Core con PostgreSQL y Snake Case
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, ".keys")))
+    .SetApplicationName("SIAE-SAEV3");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseNpgsql(connectionString);
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        npgsqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
+        npgsqlOptions.CommandTimeout(120);
+    });
     options.UseSnakeCaseNamingConvention();
 });
 
-// Configurar Dapper para usar snake_case
 DefaultTypeMap.MatchNamesWithUnderscores = true;
 
-// Registrar IDbConnection para Dapper
-builder.Services.AddScoped<IDbConnection>(sp => 
+builder.Services.AddScoped<IDbConnection>(sp =>
     new NpgsqlConnection(connectionString));
 
 // ====================================================================
@@ -51,7 +59,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:4200")
             .AllowAnyMethod()
             .AllowAnyHeader()
-            .AllowCredentials(); // Permitir cookies/credenciales si se requieren
+            .AllowCredentials();
     });
 });
 
@@ -59,28 +67,19 @@ builder.Services.AddCors(options =>
 // SERVICIOS Y REPOSITORIOS
 // ====================================================================
 
-// Services
 builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IJWTService, JWTService>();
 
-// Repositories
 builder.Services.AddScoped<IUserRepositorie, UserRepositorie>();
-builder.Services.AddScoped<IServiceRepositorie, ServiceRepositorie>();
 builder.Services.AddScoped<IAdminCatalogRepositorie, AdminCatalogRepositorie>();
 builder.Services.AddScoped<IStudentRepositorie, StudentRepositorie>();
 builder.Services.AddScoped<IStudentSupportRepositorie, StudentSupportRepositorie>();
-builder.Services.AddScoped<ICanalizationRepositorie, CanalizationRepositorie>();
-builder.Services.AddScoped<IPsychoeducationalAssessmentRepositorie, PsychoeducationalAssessmentRepositorie>();
-builder.Services.AddScoped<ICIERepositorie, CIERepositorie>();
-builder.Services.AddScoped<ITEARepositorie, TEARepositorie>();
-builder.Services.AddScoped<IMaterialRepositorie, MaterialRepositorie>();
-builder.Services.AddScoped<IAssignmentRepositorie, AssignmentRepositorie>();
-builder.Services.AddScoped<IReportRepositorie, ReportRepositorie>();
 builder.Services.AddScoped<INotificationRepositorie, NotificationRepositorie>();
 
 // ====================================================================
-// Settings para el JWT
+// CONFIGURACIÓN JWT
 // ====================================================================
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -101,7 +100,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnMessageReceived = context =>
             {
                 var token = context.Request.Headers["Authorization"]
-                    .FirstOrDefault()?.Split(" ").Last();   
+                    .FirstOrDefault()?.Split(" ").Last();
 
                 if (string.IsNullOrEmpty(token))
                     token = context.Request.Cookies["jwt"];
@@ -123,53 +122,42 @@ builder.Services.AddControllers(options =>
     options.Filters.Add<JSchemaResultFilter>();
 });
 
-// OpenAPI and Scalar Documentation
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
-// Middleware Global de Excepciones
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 // ====================================================================
-// APLICAR MIGRACIONES AUTOMÁTICAMENTE
+// APLICAR MIGRACIONES AUTOMÁTICAMENTE AL INICIAR
 // ====================================================================
 
-using (var scope = app.Services.CreateScope())
+try
 {
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AppDbContext>();
-        
-        // Aplicar migraciones pendientes
-        context.Database.Migrate();
-        
-        app.Logger.LogInformation("Database migrations applied successfully.");
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogError(ex, "An error occurred while migrating the database.");
-    }
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+    app.Logger.LogInformation("Database migrations applied successfully.");
+}
+catch (Exception ex) when (ex is NpgsqlException or TimeoutException or InvalidOperationException)
+{
+    app.Logger.LogError(ex, "No se pudieron aplicar migraciones al iniciar. La API seguirá levantando; revisa conexión a PostgreSQL.");
 }
 
 // ====================================================================
 // CONFIGURACIÓN DEL PIPELINE HTTP
 // ====================================================================
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    
-    // Scalar API Documentation - Accessible at /scalar/v1
     app.MapScalarApiReference(options =>
     {
         options
-            .WithTitle("SIAE API Documentation")
-            .WithTheme(Scalar.AspNetCore.ScalarTheme.Purple)
-            .WithDefaultHttpClient(Scalar.AspNetCore.ScalarTarget.CSharp, Scalar.AspNetCore.ScalarClient.HttpClient);
+            .WithTitle("SIAE API - Microservicio Gestión de Usuarios")
+            .WithTheme(ScalarTheme.Purple)
+            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
     });
 }
 else
@@ -184,8 +172,42 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Redireccionar la raíz a la documentación de Scalar
 app.MapGet("/", () => Results.Redirect("/scalar/v1"))
     .ExcludeFromDescription();
 
+app.MapGet("/health/database", async (AppDbContext dbContext) =>
+{
+    try
+    {
+        var canConnect = await dbContext.Database.CanConnectAsync();
+        return canConnect
+            ? Results.Ok(new { status = "ok", database = "connected" })
+            : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    }
+    catch (Exception ex) when (ex is NpgsqlException or TimeoutException or InvalidOperationException)
+    {
+        return Results.Json(
+            new { status = "unavailable", database = "disconnected", message = ex.GetBaseException().Message },
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+});
+
 app.Run();
+
+static string BuildPostgresConnectionString(string rawConnectionString)
+{
+    var builder = new NpgsqlConnectionStringBuilder(rawConnectionString)
+    {
+        Timeout = 30,
+        CommandTimeout = 120,
+        KeepAlive = 30,
+        Pooling = true,
+        MinPoolSize = 0,
+        MaxPoolSize = 20,
+        ConnectionIdleLifetime = 30,
+        ConnectionPruningInterval = 10,
+        IncludeErrorDetail = true
+    };
+
+    return builder.ConnectionString;
+}

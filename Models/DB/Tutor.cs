@@ -1,15 +1,17 @@
-﻿namespace Models.DB;
+namespace Models.DB;
 
 public class Tutor
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public string CompleteName { get; set; } = null!;
-    public string? Parent { get; set; }
-    public string? PhoneNumber { get; set; }
-    public string? Email {  get; set; }
+    public string? Parentesco { get; set; }
+    public string? Phone { get; set; }
+    public string? Email { get; set; }
     public string? Address { get; set; }
 
-    // Student
+    public Guid StudentId { get; set; }
     public Student Student { get; set; } = null!;
-    public Guid StudentId {  get; set; }
+
+    public Guid? UserId { get; set; }
+    public User? User { get; set; }
 }

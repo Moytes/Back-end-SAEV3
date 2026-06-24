@@ -1,4 +1,4 @@
-﻿using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens;
 using Services.IServices;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -10,7 +10,7 @@ public class JWTService(IConfiguration configuration) : IJWTService
 {
     private readonly IConfiguration _configuration = configuration;
 
-    public async Task<string> GenerateToken(Guid userId, string role, Guid? studentId = null)
+    public async Task<string> GenerateToken(Guid userId, string roleClave, IEnumerable<Claim>? additionalClaims = null)
     {
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]!));
@@ -19,15 +19,13 @@ public class JWTService(IConfiguration configuration) : IJWTService
 
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            new Claim(ClaimTypes.Role, role)
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
+            new(ClaimTypes.Role, roleClave)
         };
 
-        if (studentId.HasValue)
-        {
-            claims.Add(new Claim("studentId", studentId.Value.ToString()));
-        }
+        if (additionalClaims != null)
+            claims.AddRange(additionalClaims);
 
         var token = new JwtSecurityToken(
             issuer: _configuration["Jwt:Issuer"],

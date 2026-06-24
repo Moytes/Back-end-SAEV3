@@ -1,4 +1,4 @@
-﻿using Data;
+using Data;
 using Microsoft.EntityFrameworkCore;
 using Models.DB;
 using Models.Dto;
@@ -38,45 +38,44 @@ public class NotificationRepositorie : INotificationRepositorie
             .ToListAsync();
     }
 
-    public async Task<Result<Guid>> CreateNotification(AddNotificationRequest request)
+    public async Task<Result<int>> CreateNotification(AddNotificationRequest request)
     {
         var userExists = await _context.User.AnyAsync(x => x.Id == request.UserId);
         if (!userExists)
-            return Result<Guid>.Failure(UserErrors.UserNotFound);
+            return Result<int>.Failure(UserErrors.UserNotFound);
 
         var entity = new Notification
         {
-            Id = Guid.NewGuid(),
             UserId = request.UserId,
             Type = request.Type,
             Title = request.Title,
             Message = request.Message,
             DestinationUrl = request.DestinationUrl,
-            Read = BoolStatus.False,
+            Read = false,
             CreatedAt = DateTime.UtcNow
         };
 
         await _context.Notification.AddAsync(entity);
         await _context.SaveChangesAsync();
 
-        return Result<Guid>.Success(entity.Id);
+        return Result<int>.Success(entity.Id);
     }
 
-    public async Task<Result<bool>> MarkNotificationAsRead(Guid notificationId)
+    public async Task<Result<bool>> MarkNotificationAsRead(int notificationId)
     {
         var entity = await _context.Notification.FirstOrDefaultAsync(x => x.Id == notificationId);
 
         if (entity == null)
             return Result<bool>.Failure(NotificationErrors.NotificationNotFound);
 
-        entity.Read = BoolStatus.True;
+        entity.Read = true;
 
         await _context.SaveChangesAsync();
 
         return Result<bool>.Success(true);
     }
 
-    public async Task<Notification?> GetNotificationById(Guid notificationId)
+    public async Task<Notification?> GetNotificationById(int notificationId)
     {
         return await _context.Notification.FirstOrDefaultAsync(x => x.Id == notificationId);
     }

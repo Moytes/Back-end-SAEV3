@@ -3,20 +3,20 @@ using Microsoft.AspNetCore.Mvc;
 using Models.Request;
 using Repositories.IRepositories;
 using Services.IServices;
+using System.Security.Claims;
 
 namespace Controllers;
 
-/// <summary>
-/// Authentication controller for user login and logout operations
-/// </summary>
 [ApiController]
 [Route("api/auth")]
 public class AuthController(
     IUserRepositorie userRepositorie,
+    IStudentRepositorie studentRepositorie,
     IPasswordHashService passwordHashService,
     IJWTService jwtService) : ControllerBase
 {
     private readonly IUserRepositorie _userRepositorie = userRepositorie;
+    private readonly IStudentRepositorie _studentRepositorie = studentRepositorie;
     private readonly IPasswordHashService _passwordHashService = passwordHashService;
     private readonly IJWTService _jwtService = jwtService;
 
@@ -26,28 +26,30 @@ public class AuthController(
         if (!ModelState.IsValid)
             return BadRequest("Invalid request");
 
-        // Get user by email
         var user = await _userRepositorie.GetUserByEmail(request.Email);
         if (user == null)
             return Unauthorized("Invalid or missing user authentication");
 
-        // Verify password
         var isPasswordValid = _passwordHashService.VerifyPassword(request.Password, user.PasswordHash, user.PasswordSalt);
         if (!isPasswordValid)
             return Unauthorized("Invalid credentials");
 
-        // Check if user is active
-        if (user.Status != Models.DB.BoolStatus.True)
+        if (!user.Activo)
             return Unauthorized("User account is inactive");
 
-        // Generate JWT token
-        var token = await _jwtService.GenerateToken(user.Id, user.Role.ToString(), user.StudentId);
+        var additionalClaims = new List<Claim>();
+        if (user.Role.Clave is "TUTOR" or "ALUMNO")
+        {
+            var portalStudents = await _studentRepositorie.GetPortalStudentsByUser(user.Id, user.Role.Clave);
+            additionalClaims.AddRange(portalStudents.Select(student => new Claim("student_id", student.Id.ToString())));
+        }
 
-        // Set JWT in HTTP-only cookie
+        var token = await _jwtService.GenerateToken(user.Id, user.Role.Clave, additionalClaims);
+
         Response.Cookies.Append("jwt", token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true, // Only sent over HTTPS
+            Secure = true,
             SameSite = SameSiteMode.Strict,
             Expires = DateTimeOffset.UtcNow.AddMinutes(
                 double.Parse(HttpContext.RequestServices
@@ -56,17 +58,15 @@ public class AuthController(
 
         return Ok(new
         {
-            role = user.Role.ToString(),
-            token = token
+            role = user.Role.Clave,
+            token
         });
     }
 
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        // Remove JWT cookie
         Response.Cookies.Delete("jwt");
-
         return Ok("Logout successful");
     }
 
@@ -74,18 +74,14 @@ public class AuthController(
     [Authorize]
     public async Task<IActionResult> GetMe()
     {
-        // Get user ID from claims
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
             return Unauthorized();
 
-        // Get user from database
         var user = await _userRepositorie.GetUserById(userId);
-
         if (user == null)
             return Unauthorized("User not found");
 
-        // Get assigned schools for this user
         var schoolIds = await _userRepositorie.GetUserSchools(userId);
 
         return Ok(new
@@ -95,13 +91,15 @@ public class AuthController(
             user.Name,
             user.FatherLastName,
             user.MotherLastName,
-            user.Role,
-            user.PhoneNumber,
-            user.Status,
+            RoleId = user.RoleId,
+            RoleClave = user.Role.Clave,
+            RoleNombre = user.Role.Nombre,
+            user.Phone,
+            user.Activo,
             user.AvatarUrl,
             user.CreatedAt,
             user.UpdatedAt,
-            schoolIds = schoolIds,
+            schoolIds,
             schoolZoneId = user.SchoolZoneId
         });
     }
@@ -113,4 +111,3 @@ public class AuthController(
         return Ok("API is healthy");
     }
 }
-

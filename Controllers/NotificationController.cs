@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Models.DB;
 using Models.Request;
 using Repositories.IRepositories;
-using Services.IServices;
 using Utilities.Errors;
 
 namespace Controllers;
@@ -13,11 +11,9 @@ namespace Controllers;
 [Produces("application/json")]
 [Authorize]
 public class NotificationController(
-    INotificationRepositorie notificationRepositorie,
-    IServiceRepositorie serviceRepositorie) : ControllerBase
+    INotificationRepositorie notificationRepositorie) : ControllerBase
 {
     private readonly INotificationRepositorie _notificationRepositorie = notificationRepositorie;
-    private readonly IServiceRepositorie _serviceRepositorie = serviceRepositorie;
 
     private Guid? GetCurrentUserId()
     {
@@ -52,20 +48,11 @@ public class NotificationController(
             return BadRequest(result.error.Message);
         }
 
-        await _serviceRepositorie.AddLog(new AuditLog
-        {
-            UserId = GetCurrentUserId(),
-            Action = "CREATE",
-            AffectedTable = "notification",
-            RecordId = result.Value!.ToString(),
-            Request = System.Text.Json.JsonSerializer.Serialize(request)
-        });
-
         return StatusCode(201, result.Value);
     }
 
-    [HttpPost("{id:guid}/leer")]
-    public async Task<IActionResult> MarkAsRead(Guid id)
+    [HttpPost("{id:int}/leer")]
+    public async Task<IActionResult> MarkAsRead(int id)
     {
         var result = await _notificationRepositorie.MarkNotificationAsRead(id);
 
@@ -76,15 +63,6 @@ public class NotificationController(
 
             return BadRequest(result.error.Message);
         }
-
-        await _serviceRepositorie.AddLog(new AuditLog
-        {
-            UserId = GetCurrentUserId(),
-            Action = "MARK_READ",
-            AffectedTable = "notification",
-            RecordId = id.ToString(),
-            Request = "{}"
-        });
 
         return Ok(new { id });
     }

@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Models.DB;
-using Models.Dto;
 using Models.Request;
 using Repositories.IRepositories;
 using Services.IServices;
@@ -9,52 +7,47 @@ using Utilities.Errors;
 
 namespace Controllers;
 
-/// <summary>
-/// User management endpoints
-/// </summary>
 [ApiController]
 [Route("api/usuarios")]
 [Produces("application/json")]
 [Authorize]
 public class UserController(
     IUserRepositorie userRepository,
-    IServiceRepositorie serviceRepositorie,
+    IAdminCatalogRepositorie adminCatalogRepositorie,
     IPasswordHashService passwordHashService) : ControllerBase
 {
     private readonly IUserRepositorie _userRepository = userRepository;
-    private readonly IServiceRepositorie _serviceRepositorie = serviceRepositorie;
+    private readonly IAdminCatalogRepositorie _adminCatalogRepositorie = adminCatalogRepositorie;
     private readonly IPasswordHashService _passwordHashService = passwordHashService;
 
     [HttpGet("/api/roles")]
-    [Authorize(Roles = "ADMIN,DIRECTOR_USAER")]
-    public IActionResult GetRoles()
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> GetRoles()
     {
-        var roles = Enum.GetValues<UserRole>()
-            .Select(r => new EnumOptionDto
-            {
-                Key = (int)r,
-                Value = r.ToString()
-            });
-
+        var roles = await _adminCatalogRepositorie.GetRoles();
         return Ok(roles);
     }
 
     [HttpGet]
-    [Authorize(Roles = "ADMIN,DIRECTOR_USAER")]
+    [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> GetUsers(
-        [FromQuery] UserRole? role,
-        [FromQuery] Guid? schoolZoneId,
-        [FromQuery] Guid? schoolId)
+        [FromQuery] int? roleId,
+        [FromQuery] int? schoolZoneId,
+        [FromQuery] int? schoolId)
     {
-        var users = await _userRepository.GetUsers(role, schoolZoneId, schoolId);
+        var users = await _userRepository.GetUsers(roleId, schoolZoneId, schoolId);
         return Ok(users);
     }
 
     [HttpPost]
+    [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> CreateUser([FromBody] AddUserRequest request)
     {
         if (!ModelState.IsValid)
             return BadRequest("Invalid request");
+
+        if (request.RoleId != 2)
+            return BadRequest("El administrador de plataforma solo puede crear usuarios SUPERVISOR.");
 
         var passwordHash = _passwordHashService.HashPassword(request.Password, out string passwordSalt);
 
@@ -62,30 +55,21 @@ public class UserController(
 
         if (!user.IsSuccess)
         {
-            if (user.error.Code == UserErrors.EmailAlreadyExists.Code ||
-                user.error.Code == UserErrors.StudentAlreadyHasUserAccount.Code ||
-                user.error.Code == UserErrors.StudentIdRequiredForStudentRole.Code)
+            if (user.error.Code == UserErrors.EmailAlreadyExists.Code)
                 return Conflict(user.error.Message);
 
-            if (user.error.Code == StudentErrors.StudentNotFound.Code ||
+            if (user.error.Code == UserErrors.RoleNotFound.Code ||
                 user.error.Code == SchoolErrors.SchoolZoneNotFound.Code)
                 return NotFound(user.error.Message);
 
             return BadRequest(user.error.Message);
         }
 
-        await _serviceRepositorie.AddLog(new AuditLog
-        {
-            Action = "CREATE",
-            AffectedTable = "user",
-            RecordId = user.Value!.ToString(),
-            Request = System.Text.Json.JsonSerializer.Serialize(request)
-        });
-
         return StatusCode(201, user.Value);
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
     {
         if (!ModelState.IsValid)
@@ -96,30 +80,21 @@ public class UserController(
         if (!result.IsSuccess)
         {
             if (result.error.Code == UserErrors.UserNotFound.Code ||
-                result.error.Code == StudentErrors.StudentNotFound.Code ||
+                result.error.Code == UserErrors.RoleNotFound.Code ||
                 result.error.Code == SchoolErrors.SchoolZoneNotFound.Code)
                 return NotFound(result.error.Message);
 
-            if (result.error.Code == UserErrors.EmailAlreadyExists.Code ||
-                result.error.Code == UserErrors.StudentAlreadyHasUserAccount.Code ||
-                result.error.Code == UserErrors.StudentIdRequiredForStudentRole.Code)
+            if (result.error.Code == UserErrors.EmailAlreadyExists.Code)
                 return Conflict(result.error.Message);
 
             return BadRequest(result.error.Message);
         }
 
-        await _serviceRepositorie.AddLog(new AuditLog
-        {
-            Action = "UPDATE",
-            AffectedTable = "user",
-            RecordId = id.ToString(),
-            Request = System.Text.Json.JsonSerializer.Serialize(request)
-        });
-
         return Ok(new { id });
     }
 
     [HttpPost("{id:guid}/grupos")]
+    [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> AssignUserToGroup(Guid id, [FromBody] AssignUserGroupRequest request)
     {
         if (!ModelState.IsValid)
@@ -140,24 +115,11 @@ public class UserController(
             return BadRequest(result.error.Message);
         }
 
-        await _serviceRepositorie.AddLog(new AuditLog
-        {
-            Action = "CREATE",
-            AffectedTable = "user_group",
-            RecordId = result.Value!.ToString(),
-            Request = System.Text.Json.JsonSerializer.Serialize(new
-            {
-                UserId = id,
-                request.GroupId,
-                request.SchoolYearId,
-                request.EsTitular
-            })
-        });
-
         return StatusCode(201, result.Value);
     }
 
     [HttpPost("{id:guid}/escuelas")]
+    [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> AssignUserToSchool(Guid id, [FromBody] AssignUserSchoolRequest request)
     {
         if (!ModelState.IsValid)
@@ -178,18 +140,27 @@ public class UserController(
             return BadRequest(result.error.Message);
         }
 
-        await _serviceRepositorie.AddLog(new AuditLog
+        return StatusCode(201, result.Value);
+    }
+
+    [HttpPost("{id:guid}/supervisor-escuela")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> AssignSupervisorToSchool(Guid id, [FromBody] AssignSupervisorSchoolRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest("Invalid request");
+
+        var result = await _userRepository.AssignSupervisorToSchool(id, request);
+
+        if (!result.IsSuccess)
         {
-            Action = "CREATE",
-            AffectedTable = "user_school",
-            RecordId = result.Value!.ToString(),
-            Request = System.Text.Json.JsonSerializer.Serialize(new
-            {
-                UserId = id,
-                request.SchoolId,
-                request.SchoolYearId
-            })
-        });
+            if (result.error.Code == UserErrors.UserNotFound.Code ||
+                result.error.Code == SchoolErrors.SchoolNotFound.Code ||
+                result.error.Code == SchoolErrors.SchoolYearNotFound.Code)
+                return NotFound(result.error.Message);
+
+            return BadRequest(result.error.Message);
+        }
 
         return StatusCode(201, result.Value);
     }

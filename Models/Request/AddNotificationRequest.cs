@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Models.DB;
 
 namespace Models.Request;
@@ -9,7 +9,7 @@ public class AddNotificationRequest
     public Guid UserId { get; set; }
 
     [Required]
-    public notificationType Type { get; set; }
+    public NotificationType Type { get; set; }
 
     [Required]
     [MaxLength(200)]
