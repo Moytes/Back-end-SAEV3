@@ -29,8 +29,10 @@ var connectionString = builder.Configuration.GetConnectionString("SupabaseConnec
     ?? throw new InvalidOperationException("Connection string 'SupabaseConnection' not found.");
 connectionString = BuildPostgresConnectionString(connectionString);
 
+var keysPath = Path.Combine(builder.Environment.ContentRootPath, ".keys");
+if (!Directory.Exists(keysPath)) Directory.CreateDirectory(keysPath);
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, ".keys")))
+    .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
     .SetApplicationName("SIAE-SAEV3");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -52,11 +54,14 @@ builder.Services.AddScoped<IDbConnection>(sp =>
 // CONFIGURACIÓN DE CORS
 // ====================================================================
 
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? ["http://localhost:4200"];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularDev", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins(allowedOrigins)
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -172,7 +177,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/", () => Results.Redirect("/scalar/v1"))
+app.MapGet("/", () => app.Environment.IsDevelopment()
+        ? Results.Redirect("/scalar/v1")
+        : Results.Ok(new { service = "SIAE-SAEV3", status = "running" }))
     .ExcludeFromDescription();
 
 app.MapGet("/health/database", async (AppDbContext dbContext) =>

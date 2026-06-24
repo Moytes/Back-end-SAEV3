@@ -26,15 +26,14 @@ RUN dotnet publish "SIAE-V2.csproj" -c Release -o /app/publish /p:UseAppHost=fal
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-# 1. Exponer puerto estándar de .NET 8+
-EXPOSE 8080 
+# 1. Exponer puerto (Render inyecta $PORT)
+EXPOSE 10000
 
 # 2. Copia los archivos
 COPY --from=publish /app/publish .
 
-# 3. Establecer el entorno local y puerto
+# 3. Entorno — Render inyecta PORT como variable de entorno
 ENV ASPNETCORE_ENVIRONMENT=Production
-ENV ASPNETCORE_URLS=http://+:8080
 
-# 4. Entrypoint estándar y directo para contenedores .NET
-ENTRYPOINT ["dotnet", "SIAE-V2.dll"]
+# 4. Entrypoint con shell para expandir $PORT
+CMD ["sh", "-c", "dotnet SIAE-V2.dll --urls http://+:${PORT:-10000}"]

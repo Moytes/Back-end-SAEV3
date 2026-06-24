@@ -52,12 +52,11 @@ PublishScripts/
 *.nuget.props
 *.nuget.targets
 
-# Archivos de configuración sensibles
-# NOTA: Comentados para que Docker Desktop incluya la configuración. 
-# Si usas variables de entorno en prod, puedes volver a ignorarlos.
-# appsettings.json
-# appsettings.Development.json
-# appsettings.*.json
+# Archivos de configuración sensibles (en Render se usan variables de entorno)
+appsettings.json
+appsettings.Development.json
+appp.json
+.keys/
 
 
 # Documentación y archivos varios
