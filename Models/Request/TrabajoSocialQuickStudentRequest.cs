@@ -27,8 +27,9 @@ public class TrabajoSocialQuickStudentRequest
 
     public string? PhotoUrl { get; set; }
 
-    [Required]
-    public int GroupId { get; set; }
+    public int? SchoolId { get; set; }
+
+    public int? GroupId { get; set; }
 
     [Required]
     public int SchoolYearId { get; set; }

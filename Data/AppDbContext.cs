@@ -317,6 +317,12 @@ public class AppDbContext : DbContext
             .HasForeignKey(s => s.UserId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        modelBuilder.Entity<Student>()
+            .HasOne(s => s.School)
+            .WithMany()
+            .HasForeignKey(s => s.SchoolId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Tutor → Student, User
         modelBuilder.Entity<Tutor>()
             .HasOne(t => t.Student)

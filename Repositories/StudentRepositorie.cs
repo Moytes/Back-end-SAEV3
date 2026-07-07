@@ -35,8 +35,8 @@ public class StudentRepositorie : IStudentRepositorie
                 s.curp,
                 s.photo_url AS PhotoUrl,
                 s.activo,
-                sc.id AS SchoolId,
-                sc.name AS SchoolName,
+                COALESCE(sc.id, direct_school.id) AS SchoolId,
+                COALESCE(sc.name, direct_school.name) AS SchoolName,
                 g.id AS GroupId,
                 CONCAT(gr.numero, '° ', g.section) AS GroupName,
                 sy.id AS SchoolYearId,
@@ -282,7 +282,7 @@ public class StudentRepositorie : IStudentRepositorie
         return Result<int>.Success(registration.Id);
     }
 
-    public async Task<IEnumerable<StudentListItemDto>> GetStudentsBySchools(string? search, int? schoolId, int? groupId, IEnumerable<int> allowedSchoolIds)
+    public async Task<IEnumerable<StudentListItemDto>> GetStudentsBySchools(string? search, int? schoolId, int? groupId, int? educationLevelId, IEnumerable<int> allowedSchoolIds)
     {
         var schoolIds = allowedSchoolIds.Distinct().ToArray();
         if (schoolIds.Length == 0)
@@ -306,17 +306,21 @@ public class StudentRepositorie : IStudentRepositorie
                 sc.name AS SchoolName,
                 g.id AS GroupId,
                 CONCAT(gr.numero, '° ', g.section) AS GroupName,
+                g.grade_id AS GradeId,
+                COALESCE(gr.education_level_id, direct_school.education_level_id) AS EducationLevelId,
                 sy.id AS SchoolYearId,
                 sy.name AS SchoolYearName
             FROM "student" s
-            INNER JOIN "registration" r ON r.student_id = s.id
-            INNER JOIN "group" g ON g.id = r.group_id
-            INNER JOIN "grade" gr ON gr.id = g.grade_id
-            INNER JOIN "school" sc ON sc.id = g.school_id
-            INNER JOIN "school_year" sy ON sy.id = r.school_year_id
-            WHERE sc.id = ANY(@AllowedSchoolIds)
-              AND (@SchoolId IS NULL OR sc.id = @SchoolId)
+            LEFT JOIN "registration" r ON r.student_id = s.id
+            LEFT JOIN "group" g ON g.id = r.group_id
+            LEFT JOIN "grade" gr ON gr.id = g.grade_id
+            LEFT JOIN "school" sc ON sc.id = g.school_id
+            LEFT JOIN "school" direct_school ON direct_school.id = s.school_id
+            LEFT JOIN "school_year" sy ON sy.id = r.school_year_id
+            WHERE COALESCE(sc.id, direct_school.id) = ANY(@AllowedSchoolIds)
+              AND (@SchoolId IS NULL OR COALESCE(sc.id, direct_school.id) = @SchoolId)
               AND (@GroupId IS NULL OR g.id = @GroupId)
+              AND (@EducationLevelId IS NULL OR COALESCE(gr.education_level_id, direct_school.education_level_id) = @EducationLevelId)
               AND (
                 @Search IS NULL OR
                 s.name ILIKE '%' || @Search || '%' OR
@@ -332,6 +336,7 @@ public class StudentRepositorie : IStudentRepositorie
             Search = string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
             SchoolId = schoolId,
             GroupId = groupId,
+            EducationLevelId = educationLevelId,
             AllowedSchoolIds = schoolIds
         });
     }
@@ -412,30 +417,49 @@ public class StudentRepositorie : IStudentRepositorie
         string? studentPasswordSalt)
     {
         var schoolIds = allowedSchoolIds.Distinct().ToArray();
-        var group = await _context.Group
-            .Include(g => g.School)
-            .Include(g => g.Grade)
-            .FirstOrDefaultAsync(g => g.Id == request.GroupId);
+        Group? group = null;
+        int schoolId;
 
-        if (group == null)
-            return Result<Guid>.Failure(GroupErrors.GroupNotFound);
+        if (request.GroupId.HasValue && request.GroupId.Value > 0)
+        {
+            group = await _context.Group
+                .Include(g => g.School)
+                .Include(g => g.Grade)
+                .FirstOrDefaultAsync(g => g.Id == request.GroupId.Value);
 
-        if (!schoolIds.Contains(group.SchoolId))
+            if (group == null)
+                return Result<Guid>.Failure(GroupErrors.GroupNotFound);
+
+            schoolId = group.SchoolId;
+        }
+        else
+        {
+            if (!request.SchoolId.HasValue)
+                return Result<Guid>.Failure(SchoolErrors.SchoolNotFound);
+
+            schoolId = request.SchoolId.Value;
+        }
+
+        if (!schoolIds.Contains(schoolId))
+            return Result<Guid>.Failure(SchoolErrors.SchoolNotFound);
+
+        var schoolExists = await _context.School.AnyAsync(x => x.Id == schoolId);
+        if (!schoolExists)
             return Result<Guid>.Failure(SchoolErrors.SchoolNotFound);
 
         var schoolYearExists = await _context.SchoolYear.AnyAsync(x => x.Id == request.SchoolYearId);
         if (!schoolYearExists)
             return Result<Guid>.Failure(SchoolErrors.SchoolYearNotFound);
 
-        var requiresTutorAccount = group.Grade.EducationLevelId is 1 or 2;
-        var requiresStudentAccount = group.Grade.EducationLevelId is 3 or 4;
+        var createTutorAccount =
+            request.CreateTutorAccount &&
+            !string.IsNullOrWhiteSpace(request.TutorEmail) &&
+            !string.IsNullOrWhiteSpace(tutorPasswordHash) &&
+            !string.IsNullOrWhiteSpace(tutorPasswordSalt);
 
-        if (requiresTutorAccount)
+        if (createTutorAccount)
         {
-            if (string.IsNullOrWhiteSpace(request.TutorCompleteName) ||
-                string.IsNullOrWhiteSpace(request.TutorEmail) ||
-                string.IsNullOrWhiteSpace(tutorPasswordHash) ||
-                string.IsNullOrWhiteSpace(tutorPasswordSalt))
+            if (string.IsNullOrWhiteSpace(request.TutorCompleteName))
             {
                 return Result<Guid>.Failure(StudentErrors.AccountCredentialsRequired);
             }
@@ -445,15 +469,13 @@ public class StudentRepositorie : IStudentRepositorie
                 return Result<Guid>.Failure(UserErrors.EmailAlreadyExists);
         }
 
-        if (requiresStudentAccount)
-        {
-            if (string.IsNullOrWhiteSpace(request.StudentEmail) ||
-                string.IsNullOrWhiteSpace(studentPasswordHash) ||
-                string.IsNullOrWhiteSpace(studentPasswordSalt))
-            {
-                return Result<Guid>.Failure(StudentErrors.AccountCredentialsRequired);
-            }
+        var createStudentAccount =
+            !string.IsNullOrWhiteSpace(request.StudentEmail) &&
+            !string.IsNullOrWhiteSpace(studentPasswordHash) &&
+            !string.IsNullOrWhiteSpace(studentPasswordSalt);
 
+        if (createStudentAccount)
+        {
             var studentEmailInUse = await _context.User.AnyAsync(u => u.Email == request.StudentEmail);
             if (studentEmailInUse)
                 return Result<Guid>.Failure(UserErrors.EmailAlreadyExists);
@@ -482,6 +504,7 @@ public class StudentRepositorie : IStudentRepositorie
                 BirthDate = request.BirthDate,
                 CURP = request.CURP,
                 PhotoUrl = request.PhotoUrl,
+                SchoolId = schoolId,
                 Activo = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -489,7 +512,7 @@ public class StudentRepositorie : IStudentRepositorie
 
             await _context.Student.AddAsync(student);
 
-            if (requiresStudentAccount)
+            if (createStudentAccount)
             {
                 var studentUser = new User
                 {
@@ -510,20 +533,23 @@ public class StudentRepositorie : IStudentRepositorie
                 await _context.User.AddAsync(studentUser);
             }
 
-            await _context.Registration.AddAsync(new Registration
+            if (group != null)
             {
-                StudentId = student.Id,
-                GroupId = request.GroupId,
-                SchoolYearId = request.SchoolYearId,
-                IngressDate = request.IngressDate ?? DateOnly.FromDateTime(DateTime.UtcNow),
-                IsNew = request.IsNew,
-                IsTracking = request.IsTracking,
-                FinalSituation = request.FinalSituation,
-                Notes = request.Notes
-            });
+                await _context.Registration.AddAsync(new Registration
+                {
+                    StudentId = student.Id,
+                    GroupId = group.Id,
+                    SchoolYearId = request.SchoolYearId,
+                    IngressDate = request.IngressDate ?? DateOnly.FromDateTime(DateTime.UtcNow),
+                    IsNew = request.IsNew,
+                    IsTracking = request.IsTracking,
+                    FinalSituation = request.FinalSituation,
+                    Notes = request.Notes
+                });
+            }
 
             User? tutorUser = null;
-            if (requiresTutorAccount)
+            if (createTutorAccount)
             {
                 tutorUser = new User
                 {
@@ -620,9 +646,15 @@ public class StudentRepositorie : IStudentRepositorie
         if (schoolIds.Length == 0)
             return false;
 
-        return await _context.Registration
+        var hasRegistrationInAllowedSchool = await _context.Registration
             .Include(r => r.Group)
             .AnyAsync(r => r.StudentId == studentId && schoolIds.Contains(r.Group.SchoolId));
+
+        if (hasRegistrationInAllowedSchool)
+            return true;
+
+        return await _context.Student
+            .AnyAsync(s => s.Id == studentId && s.SchoolId.HasValue && schoolIds.Contains(s.SchoolId.Value));
     }
 
     public async Task<Result<int>> AddTutorForAllowedStudent(Guid studentId, AddTutorRequest request, IEnumerable<int> allowedSchoolIds)
@@ -632,6 +664,43 @@ public class StudentRepositorie : IStudentRepositorie
             return Result<int>.Failure(StudentErrors.StudentNotFound);
 
         return await AddTutor(studentId, request);
+    }
+
+    public async Task<Result<int>> UpdateTutorForAllowedStudent(Guid studentId, int tutorId, AddTutorRequest request, IEnumerable<int> allowedSchoolIds)
+    {
+        var belongs = await StudentBelongsToSchools(studentId, allowedSchoolIds);
+        if (!belongs)
+            return Result<int>.Failure(StudentErrors.StudentNotFound);
+
+        var tutor = await _context.Tutor.FirstOrDefaultAsync(t => t.Id == tutorId && t.StudentId == studentId);
+        if (tutor == null)
+            return Result<int>.Failure(StudentErrors.TutorNotFound);
+
+        tutor.CompleteName = request.CompleteName;
+        tutor.Parentesco = request.Parentesco;
+        tutor.Phone = request.Phone;
+        tutor.Email = request.Email;
+        tutor.Address = request.Address;
+
+        await _context.SaveChangesAsync();
+
+        return Result<int>.Success(tutor.Id);
+    }
+
+    public async Task<Result<bool>> DeleteTutorForAllowedStudent(Guid studentId, int tutorId, IEnumerable<int> allowedSchoolIds)
+    {
+        var belongs = await StudentBelongsToSchools(studentId, allowedSchoolIds);
+        if (!belongs)
+            return Result<bool>.Failure(StudentErrors.StudentNotFound);
+
+        var tutor = await _context.Tutor.FirstOrDefaultAsync(t => t.Id == tutorId && t.StudentId == studentId);
+        if (tutor == null)
+            return Result<bool>.Failure(StudentErrors.TutorNotFound);
+
+        _context.Tutor.Remove(tutor);
+        await _context.SaveChangesAsync();
+
+        return Result<bool>.Success(true);
     }
 
     public async Task<Result<bool>> CreateTutorAccountForAllowedStudent(Guid studentId, int tutorId, TrabajoSocialTutorAccountRequest request, IEnumerable<int> allowedSchoolIds, string passwordHash, string passwordSalt)

@@ -18,6 +18,8 @@ public class StudentListItemDto
     public string? SchoolName { get; set; }
     public int? GroupId { get; set; }
     public string? GroupName { get; set; }
+    public int? GradeId { get; set; }
+    public int? EducationLevelId { get; set; }
     public int? SchoolYearId { get; set; }
     public string? SchoolYearName { get; set; }
 

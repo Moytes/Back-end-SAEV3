@@ -13,12 +13,43 @@ public class AuthController(
     IUserRepositorie userRepositorie,
     IStudentRepositorie studentRepositorie,
     IPasswordHashService passwordHashService,
-    IJWTService jwtService) : ControllerBase
+    IJWTService jwtService,
+    IConfiguration configuration) : ControllerBase
 {
     private readonly IUserRepositorie _userRepositorie = userRepositorie;
     private readonly IStudentRepositorie _studentRepositorie = studentRepositorie;
     private readonly IPasswordHashService _passwordHashService = passwordHashService;
     private readonly IJWTService _jwtService = jwtService;
+    private readonly IConfiguration _configuration = configuration;
+
+    private const string AuthCookieName = "jwt";
+
+    /// <summary>
+    /// Opciones de la cookie de autenticación. httpOnly siempre; Secure y SameSite
+    /// son configurables (Auth:Cookie:*) con valores seguros por defecto, para poder
+    /// usar SameSite=None en despliegues cross-domain sin tocar código.
+    /// </summary>
+    private CookieOptions BuildAuthCookieOptions(bool withExpiry)
+    {
+        var sameSite = Enum.TryParse<SameSiteMode>(
+            _configuration["Auth:Cookie:SameSite"], ignoreCase: true, out var parsed)
+            ? parsed
+            : SameSiteMode.Lax;
+
+        var options = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = _configuration.GetValue("Auth:Cookie:Secure", true),
+            SameSite = sameSite,
+            Path = "/"
+        };
+
+        if (withExpiry)
+            options.Expires = DateTimeOffset.UtcNow.AddMinutes(
+                double.Parse(_configuration["Jwt:ExpirationInMinutes"]!));
+
+        return options;
+    }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -46,15 +77,7 @@ public class AuthController(
 
         var token = await _jwtService.GenerateToken(user.Id, user.Role.Clave, additionalClaims);
 
-        Response.Cookies.Append("jwt", token, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddMinutes(
-                double.Parse(HttpContext.RequestServices
-                    .GetRequiredService<IConfiguration>()["Jwt:ExpirationInMinutes"]!))
-        });
+        Response.Cookies.Append(AuthCookieName, token, BuildAuthCookieOptions(withExpiry: true));
 
         return Ok(new
         {
@@ -66,7 +89,9 @@ public class AuthController(
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        Response.Cookies.Delete("jwt");
+        // Borrar con los mismos atributos (Path/Secure/SameSite) para garantizar
+        // que el navegador elimine la cookie.
+        Response.Cookies.Delete(AuthCookieName, BuildAuthCookieOptions(withExpiry: false));
         return Ok("Logout successful");
     }
 

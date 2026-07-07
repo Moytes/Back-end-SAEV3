@@ -27,7 +27,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
 # 1. Exponer puerto (Render inyecta $PORT)
-EXPOSE 10000
+EXPOSE 8080
 
 # 2. Copia los archivos
 COPY --from=publish /app/publish .
@@ -36,4 +36,4 @@ COPY --from=publish /app/publish .
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 # 4. Entrypoint con shell para expandir $PORT
-CMD ["sh", "-c", "dotnet SIAE-V2.dll --urls http://+:${PORT:-10000}"]
+CMD ["sh", "-c", "dotnet SIAE-V2.dll --urls http://+:${WEBSITES_PORT:-${PORT:-8080}}"]

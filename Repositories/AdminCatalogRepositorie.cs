@@ -288,6 +288,60 @@ public class AdminCatalogRepositorie : IAdminCatalogRepositorie
         return Result<int>.Success(group.Id);
     }
 
+    public async Task<Result<int>> UpdateGroup(int groupId, AddGroupRequest request)
+    {
+        var group = await _context.Group.FirstOrDefaultAsync(g => g.Id == groupId);
+        if (group == null)
+            return Result<int>.Failure(GroupErrors.GroupNotFound);
+
+        var gradeExists = await _context.Grade.AnyAsync(x => x.Id == request.GradeId);
+        if (!gradeExists)
+            return Result<int>.Failure(SchoolErrors.GradeNotFound);
+
+        var yearExists = await _context.SchoolYear.AnyAsync(x => x.Id == request.SchoolYearId);
+        if (!yearExists)
+            return Result<int>.Failure(SchoolErrors.SchoolYearNotFound);
+
+        var duplicate = await _context.Group.AnyAsync(x =>
+            x.Id != groupId &&
+            x.SchoolId == group.SchoolId &&
+            x.GradeId == request.GradeId &&
+            x.Section == request.Section &&
+            x.SchoolYearId == request.SchoolYearId);
+
+        if (duplicate)
+            return Result<int>.Failure(GroupErrors.GroupAlreadyExists);
+
+        group.GradeId = request.GradeId;
+        group.Section = request.Section;
+        group.SchoolYearId = request.SchoolYearId;
+
+        await _context.SaveChangesAsync();
+
+        return Result<int>.Success(group.Id);
+    }
+
+    public async Task<Result<int>> DeleteGroup(int groupId)
+    {
+        var group = await _context.Group.FirstOrDefaultAsync(g => g.Id == groupId);
+        if (group == null)
+            return Result<int>.Failure(GroupErrors.GroupNotFound);
+
+        var hasStudents = await _context.Registration.AnyAsync(r => r.GroupId == groupId);
+        if (hasStudents)
+            return Result<int>.Failure(GroupErrors.GroupHasStudents);
+
+        // Quitar asignaciones de docentes antes de eliminar el grupo
+        var teacherAssignments = await _context.UserGroup.Where(ug => ug.GroupId == groupId).ToListAsync();
+        if (teacherAssignments.Count > 0)
+            _context.UserGroup.RemoveRange(teacherAssignments);
+
+        _context.Group.Remove(group);
+        await _context.SaveChangesAsync();
+
+        return Result<int>.Success(groupId);
+    }
+
     public async Task<IEnumerable<EducationLevel>> GetEducationLevels()
     {
         return await _context.EducationLevel

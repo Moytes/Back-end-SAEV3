@@ -55,16 +55,30 @@ builder.Services.AddScoped<IDbConnection>(sp =>
 // ====================================================================
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? ["http://localhost:4200"];
+    ?? [];
+allowedOrigins = allowedOrigins
+    .Where(origin => !string.IsNullOrWhiteSpace(origin))
+    .ToArray();
+
+if (allowedOrigins.Length == 0 && builder.Environment.IsDevelopment())
+    allowedOrigins = ["http://localhost:4200"];
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularDev", policy =>
     {
-        policy.WithOrigins(allowedOrigins)
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
+        if (allowedOrigins.Length > 0)
+        {
+            policy.WithOrigins(allowedOrigins)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        }
+        else
+        {
+            policy.AllowAnyMethod()
+                .AllowAnyHeader();
+        }
     });
 });
 
@@ -138,6 +152,8 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 // APLICAR MIGRACIONES AUTOMÁTICAMENTE AL INICIAR
 // ====================================================================
 
+if (builder.Configuration.GetValue("Database:ApplyMigrationsOnStartup", builder.Environment.IsDevelopment()))
+{
 try
 {
     using var scope = app.Services.CreateScope();
@@ -148,6 +164,7 @@ try
 catch (Exception ex) when (ex is NpgsqlException or TimeoutException or InvalidOperationException)
 {
     app.Logger.LogError(ex, "No se pudieron aplicar migraciones al iniciar. La API seguirá levantando; revisa conexión a PostgreSQL.");
+}
 }
 
 // ====================================================================
@@ -181,6 +198,13 @@ app.MapGet("/", () => app.Environment.IsDevelopment()
         ? Results.Redirect("/scalar/v1")
         : Results.Ok(new { service = "SIAE-SAEV3", status = "running" }))
     .ExcludeFromDescription();
+
+app.MapGet("/health", () => Results.Ok(new
+{
+    service = "SIAE-SAEV3",
+    status = "ok",
+    utc = DateTime.UtcNow
+}));
 
 app.MapGet("/health/database", async (AppDbContext dbContext) =>
 {

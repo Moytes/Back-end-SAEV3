@@ -46,8 +46,8 @@ public class UserController(
         if (!ModelState.IsValid)
             return BadRequest("Invalid request");
 
-        if (request.RoleId != 2)
-            return BadRequest("El administrador de plataforma solo puede crear usuarios SUPERVISOR.");
+        if (request.RoleId != 2 && request.RoleId != 11)
+            return BadRequest("El administrador de plataforma solo puede crear usuarios SUPERVISOR o CREADOR_CONTENIDO.");
 
         var passwordHash = _passwordHashService.HashPassword(request.Password, out string passwordSalt);
 
@@ -158,6 +158,9 @@ public class UserController(
                 result.error.Code == SchoolErrors.SchoolNotFound.Code ||
                 result.error.Code == SchoolErrors.SchoolYearNotFound.Code)
                 return NotFound(result.error.Message);
+
+            if (result.error.Code == UserErrors.RoleNotAllowed.Code)
+                return StatusCode(403, result.error.Message);
 
             return BadRequest(result.error.Message);
         }

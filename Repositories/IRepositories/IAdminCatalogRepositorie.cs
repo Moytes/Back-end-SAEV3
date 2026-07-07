@@ -19,6 +19,8 @@ public interface IAdminCatalogRepositorie
     Task<IEnumerable<GroupListItemDto>> GetGroups(int? schoolId = null, int? schoolYearId = null);
     Task<IEnumerable<GroupWithTeachersDto>> GetGroupsWithTeachers(int? schoolId = null, int? schoolYearId = null);
     Task<Result<int>> CreateGroup(AddGroupRequest request);
+    Task<Result<int>> UpdateGroup(int groupId, AddGroupRequest request);
+    Task<Result<int>> DeleteGroup(int groupId);
 
     Task<IEnumerable<EducationLevel>> GetEducationLevels();
     Task<IEnumerable<Grade>> GetGrades(int? educationLevelId = null);

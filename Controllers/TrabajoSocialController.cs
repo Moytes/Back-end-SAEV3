@@ -137,14 +137,57 @@ public class TrabajoSocialController(
         return StatusCode(201, result.Value);
     }
 
+    [HttpPut("grupos/{groupId:int}")]
+    public async Task<IActionResult> UpdateGroup(int groupId, [FromBody] AddGroupRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest("Invalid request");
+
+        if (!await GroupIsAllowed(groupId))
+            return Forbid();
+
+        var result = await _catalogRepository.UpdateGroup(groupId, request);
+        if (!result.IsSuccess)
+            return MapError(result.error);
+
+        return Ok(new { id = result.Value });
+    }
+
+    [HttpDelete("grupos/{groupId:int}")]
+    public async Task<IActionResult> DeleteGroup(int groupId)
+    {
+        if (!await GroupIsAllowed(groupId))
+            return Forbid();
+
+        var result = await _catalogRepository.DeleteGroup(groupId);
+        if (!result.IsSuccess)
+            return MapError(result.error);
+
+        return Ok(new { id = result.Value });
+    }
+
+    [HttpDelete("grupos/{groupId:int}/docentes/{docenteId:guid}")]
+    public async Task<IActionResult> UnassignDocente(int groupId, Guid docenteId)
+    {
+        if (!await GroupIsAllowed(groupId))
+            return Forbid();
+
+        var result = await _userRepository.RemoveUserFromGroup(groupId, docenteId);
+        if (!result.IsSuccess)
+            return MapError(result.error);
+
+        return Ok(new { groupId, docenteId });
+    }
+
     [HttpGet("alumnos")]
     public async Task<IActionResult> GetStudents(
         [FromQuery] string? search = null,
         [FromQuery] int? schoolId = null,
-        [FromQuery] int? groupId = null)
+        [FromQuery] int? groupId = null,
+        [FromQuery] int? educationLevelId = null)
     {
         var schoolIds = await GetAllowedSchoolIds();
-        var students = await _studentRepository.GetStudentsBySchools(search, schoolId, groupId, schoolIds);
+        var students = await _studentRepository.GetStudentsBySchools(search, schoolId, groupId, educationLevelId, schoolIds);
         return Ok(students);
     }
 
@@ -182,6 +225,21 @@ public class TrabajoSocialController(
             return MapError(result.error);
 
         return StatusCode(201, result.Value);
+    }
+
+    [HttpGet("alumnos/{id:guid}")]
+    public async Task<IActionResult> GetStudentDetail(Guid id)
+    {
+        var schoolIds = await GetAllowedSchoolIds();
+        var belongs = await _studentRepository.StudentBelongsToSchools(id, schoolIds);
+        if (!belongs)
+            return NotFound(StudentErrors.StudentNotFound.Message);
+
+        var record = await _studentRepository.GetStudentRecord(id);
+        if (record == null)
+            return NotFound(StudentErrors.StudentNotFound.Message);
+
+        return Ok(record);
     }
 
     [HttpPut("alumnos/{id:guid}")]
@@ -226,6 +284,31 @@ public class TrabajoSocialController(
             return MapError(result.error);
 
         return StatusCode(201, result.Value);
+    }
+
+    [HttpPut("alumnos/{studentId:guid}/tutores/{tutorId:int}")]
+    public async Task<IActionResult> UpdateTutor(Guid studentId, int tutorId, [FromBody] AddTutorRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest("Invalid request");
+
+        var schoolIds = await GetAllowedSchoolIds();
+        var result = await _studentRepository.UpdateTutorForAllowedStudent(studentId, tutorId, request, schoolIds);
+        if (!result.IsSuccess)
+            return MapError(result.error);
+
+        return Ok(new { id = result.Value });
+    }
+
+    [HttpDelete("alumnos/{studentId:guid}/tutores/{tutorId:int}")]
+    public async Task<IActionResult> DeleteTutor(Guid studentId, int tutorId)
+    {
+        var schoolIds = await GetAllowedSchoolIds();
+        var result = await _studentRepository.DeleteTutorForAllowedStudent(studentId, tutorId, schoolIds);
+        if (!result.IsSuccess)
+            return MapError(result.error);
+
+        return Ok(new { studentId, tutorId });
     }
 
     [HttpPost("alumnos/{studentId:guid}/tutores/{tutorId:int}/cuenta")]
@@ -273,6 +356,14 @@ public class TrabajoSocialController(
         return (await _userRepository.GetUserSchools(userId.Value)).Distinct().ToArray();
     }
 
+    private async Task<bool> GroupIsAllowed(int groupId)
+    {
+        var schoolIds = await GetAllowedSchoolIds();
+        var groups = await _catalogRepository.GetGroups(null, null);
+        var group = groups.FirstOrDefault(g => g.Id == groupId);
+        return group != null && schoolIds.Contains(group.SchoolId);
+    }
+
     private Guid? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -283,12 +374,14 @@ public class TrabajoSocialController(
     {
         if (error.Code == StudentErrors.CurpAlreadyExists.Code ||
             error.Code == GroupErrors.GroupAlreadyExists.Code ||
+            error.Code == GroupErrors.GroupHasStudents.Code ||
             error.Code == RegistrationErrors.StudentAlreadyRegisteredInSchoolYear.Code ||
             error.Code == UserErrors.EmailAlreadyExists.Code ||
             error.Code == UserErrors.UserGroupAssignmentAlreadyExists.Code)
             return Conflict(error.Message);
 
         if (error.Code == StudentErrors.StudentNotFound.Code ||
+            error.Code == StudentErrors.TutorNotFound.Code ||
             error.Code == GroupErrors.GroupNotFound.Code ||
             error.Code == SchoolErrors.SchoolNotFound.Code ||
             error.Code == SchoolErrors.SchoolYearNotFound.Code ||

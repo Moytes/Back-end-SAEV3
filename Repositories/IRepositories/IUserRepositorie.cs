@@ -16,6 +16,7 @@ public interface IUserRepositorie
     Task<bool> UserExists(Guid userId);
     Task<bool> EmailExists(string email, Guid? excludeUserId = null);
     Task<Result<int>> AssignUserToGroup(Guid userId, AssignUserGroupRequest request);
+    Task<Result<bool>> RemoveUserFromGroup(int groupId, Guid userId);
     Task<Result<int>> AssignUserToSchool(Guid userId, AssignUserSchoolRequest request);
     Task<Result<int>> AssignSupervisorToSchool(Guid userId, AssignSupervisorSchoolRequest request);
     Task<IEnumerable<int>> GetUserSchools(Guid userId);

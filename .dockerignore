@@ -55,6 +55,7 @@ PublishScripts/
 # Archivos de configuración sensibles (en Render se usan variables de entorno)
 appsettings.json
 appsettings.Development.json
+!appsettings.Production.json
 appp.json
 .keys/
 

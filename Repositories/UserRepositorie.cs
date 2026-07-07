@@ -13,7 +13,7 @@ namespace Repositories;
 
 public class UserRepositorie : IUserRepositorie
 {
-    private static readonly int[] SupervisorManagedRoleIds = [3, 4, 5, 6, 7, 8];
+    private static readonly int[] SupervisorManagedRoleIds = [3, 4, 5, 6, 7, 8, 11];
 
     private readonly AppDbContext _context;
     private readonly IDbConnection _dbConnection;
@@ -242,6 +242,21 @@ public class UserRepositorie : IUserRepositorie
         return Result<int>.Success(entity.Id);
     }
 
+    public async Task<Result<bool>> RemoveUserFromGroup(int groupId, Guid userId)
+    {
+        var assignments = await _context.UserGroup
+            .Where(ug => ug.GroupId == groupId && ug.UserId == userId)
+            .ToListAsync();
+
+        if (assignments.Count == 0)
+            return Result<bool>.Failure(UserErrors.UserNotFound);
+
+        _context.UserGroup.RemoveRange(assignments);
+        await _context.SaveChangesAsync();
+
+        return Result<bool>.Success(true);
+    }
+
     public async Task<Result<int>> AssignUserToSchool(Guid userId, AssignUserSchoolRequest request)
     {
         var userExists = await _context.User.AnyAsync(u => u.Id == userId);
@@ -283,6 +298,11 @@ public class UserRepositorie : IUserRepositorie
         if (user == null)
             return Result<int>.Failure(UserErrors.UserNotFound);
 
+        // Solo supervisores (2) y creadores de contenido (11) se asignan por esta vía;
+        // nunca se modifica el rol del usuario.
+        if (user.RoleId != 2 && user.RoleId != 11)
+            return Result<int>.Failure(UserErrors.RoleNotAllowed);
+
         var schoolExists = await _context.School.AnyAsync(s => s.Id == request.SchoolId);
         if (!schoolExists)
             return Result<int>.Failure(SchoolErrors.SchoolNotFound);
@@ -295,7 +315,6 @@ public class UserRepositorie : IUserRepositorie
         if (activeYear == null)
             return Result<int>.Failure(SchoolErrors.SchoolYearNotFound);
 
-        user.RoleId = 2;
         user.UpdatedAt = DateTime.UtcNow;
 
         var existingAssignment = await _context.UserSchool.FirstOrDefaultAsync(x =>
