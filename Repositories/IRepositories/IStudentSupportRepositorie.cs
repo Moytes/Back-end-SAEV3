@@ -9,6 +9,7 @@ public interface IStudentSupportRepositorie
     Task<IEnumerable<DisabilityCatalogItemDto>> GetDisabilityCatalog();
     Task<IEnumerable<AttentionAreaCatalogItemDto>> GetAttentionAreasCatalog();
     Task<IEnumerable<StudentDisabilityItemDto>> GetStudentDisabilities(Guid studentId);
+    Task<IEnumerable<StudentAttentionAreaItemDto>> GetStudentAttentionAreas(Guid studentId);
 
     Task<Result<int>> AddStudentDisability(Guid studentId, AddStudentDisabilityRequest request);
     Task<Result<List<int>>> AssignStudentAttentionAreas(Guid studentId, AssignStudentAttentionAreasRequest request);

@@ -18,7 +18,7 @@ public interface IStudentRepositorie
 
     Task<Result<int>> AddRegistration(AddRegistrationRequest request);
     Task<IEnumerable<StudentListItemDto>> GetStudentsBySchools(string? search, int? schoolId, int? groupId, int? educationLevelId, IEnumerable<int> allowedSchoolIds);
-    Task<IEnumerable<StudentListItemDto>> GetStudentsBySchoolsAndAttentionArea(string? search, int? schoolId, int? groupId, IEnumerable<int> allowedSchoolIds, int attentionAreaId);
+    Task<IEnumerable<StudentListItemDto>> GetStudentsBySchoolsAndAttentionArea(string? search, int? schoolId, int? groupId, IEnumerable<int> allowedSchoolIds, int[] attentionAreaIds);
     Task<Result<Guid>> QuickRegisterStudent(
         TrabajoSocialQuickStudentRequest request,
         IEnumerable<int> allowedSchoolIds,

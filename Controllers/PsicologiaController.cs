@@ -17,7 +17,7 @@ public class PsicologiaController(
     private readonly IUserRepositorie _userRepository = userRepository;
     private readonly IStudentRepositorie _studentRepository = studentRepository;
     private readonly IAdminCatalogRepositorie _catalogRepository = catalogRepository;
-    private const int PsicologiaAreaId = 2;
+    private static readonly int[] PsicologiaAreaIds = [2, 3]; // Atención, Conducta
 
     [HttpGet("escuelas")]
     public async Task<IActionResult> GetSchools()
@@ -56,7 +56,7 @@ public class PsicologiaController(
         if (schoolId.HasValue && !schoolIds.Contains(schoolId.Value))
             return Forbid();
 
-        var students = await _studentRepository.GetStudentsBySchoolsAndAttentionArea(search, schoolId, groupId, schoolIds, PsicologiaAreaId);
+        var students = await _studentRepository.GetStudentsBySchoolsAndAttentionArea(search, schoolId, groupId, schoolIds, PsicologiaAreaIds);
         return Ok(students);
     }
 
