@@ -43,6 +43,7 @@ public class StudentSupportController(
     }
 
     [HttpPost("alumnos/{id:guid}/discapacidades")]
+    [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> AddStudentDisability(Guid id, [FromBody] AddStudentDisabilityRequest request)
     {
         if (!ModelState.IsValid)
@@ -64,6 +65,17 @@ public class StudentSupportController(
         }
 
         return StatusCode(201, result.Value);
+    }
+
+    [HttpGet("alumnos/{id:guid}/areas-atencion")]
+    public async Task<IActionResult> GetStudentAttentionAreas(Guid id)
+    {
+        var student = await _studentRepositorie.GetStudentById(id);
+        if (student == null)
+            return NotFound(StudentErrors.StudentNotFound.Message);
+
+        var result = await _studentSupportRepositorie.GetStudentAttentionAreas(id);
+        return Ok(result);
     }
 
     [HttpPost("alumnos/{id:guid}/areas-atencion")]

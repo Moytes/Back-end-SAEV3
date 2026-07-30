@@ -88,6 +88,9 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IJWTService, JWTService>();
+builder.Services.AddScoped<IStudentReportPdfService, StudentReportPdfService>();
+
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 builder.Services.AddScoped<IUserRepositorie, UserRepositorie>();
 builder.Services.AddScoped<IAdminCatalogRepositorie, AdminCatalogRepositorie>();

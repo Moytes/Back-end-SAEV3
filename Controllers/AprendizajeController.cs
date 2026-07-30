@@ -17,7 +17,7 @@ public class AprendizajeController(
     private readonly IUserRepositorie _userRepository = userRepository;
     private readonly IStudentRepositorie _studentRepository = studentRepository;
     private readonly IAdminCatalogRepositorie _catalogRepository = catalogRepository;
-    private const int AprendizajeAreaId = 1;
+    private static readonly int[] AprendizajeAreaIds = [4];
 
     [HttpGet("escuelas")]
     public async Task<IActionResult> GetSchools()
@@ -55,7 +55,7 @@ public class AprendizajeController(
         if (schoolId.HasValue && !schoolIds.Contains(schoolId.Value))
             return Forbid();
 
-        var students = await _studentRepository.GetStudentsBySchoolsAndAttentionArea(search, schoolId, groupId, schoolIds, AprendizajeAreaId);
+        var students = await _studentRepository.GetStudentsBySchoolsAndAttentionArea(search, schoolId, groupId, schoolIds, AprendizajeAreaIds);
         return Ok(students);
     }
 

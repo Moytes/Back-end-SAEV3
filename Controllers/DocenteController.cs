@@ -3,6 +3,8 @@ using Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Repositories.IRepositories;
+using Services.IServices;
 
 namespace Controllers;
 
@@ -10,9 +12,16 @@ namespace Controllers;
 [Route("api/docente")]
 [Produces("application/json")]
 [Authorize(Roles = "DOCENTE")]
-public class DocenteController(AppDbContext context) : ControllerBase
+public class DocenteController(
+    AppDbContext context,
+    IStudentRepositorie studentRepositorie,
+    IStudentSupportRepositorie studentSupportRepositorie,
+    IStudentReportPdfService studentReportPdfService) : ControllerBase
 {
     private readonly AppDbContext _context = context;
+    private readonly IStudentRepositorie _studentRepositorie = studentRepositorie;
+    private readonly IStudentSupportRepositorie _studentSupportRepositorie = studentSupportRepositorie;
+    private readonly IStudentReportPdfService _studentReportPdfService = studentReportPdfService;
 
     [HttpGet("escuelas")]
     public async Task<IActionResult> GetSchools([FromQuery] int? schoolYearId = null)
@@ -154,6 +163,87 @@ public class DocenteController(AppDbContext context) : ControllerBase
             .ToListAsync();
 
         return Ok(students);
+    }
+
+    [HttpGet("alumnos/{id:guid}/areas-atencion")]
+    public async Task<IActionResult> GetStudentAttentionAreas(Guid id)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        if (!(await GetAllowedStudentIdsAsync(userId.Value)).Contains(id))
+            return Forbid();
+
+        var result = await _studentSupportRepositorie.GetStudentAttentionAreas(id);
+        return Ok(result);
+    }
+
+    [HttpGet("alumnos/{id:guid}/historial")]
+    public async Task<IActionResult> GetHistorial(Guid id)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        if (!(await GetAllowedStudentIdsAsync(userId.Value)).Contains(id))
+            return Forbid();
+
+        var record = await _studentRepositorie.GetStudentRecord(id);
+        if (record == null)
+            return NotFound();
+
+        var disabilities = await _studentSupportRepositorie.GetStudentDisabilities(id);
+        var attentionAreas = await _studentSupportRepositorie.GetStudentAttentionAreas(id);
+
+        return Ok(new
+        {
+            student = record,
+            disabilities,
+            attentionAreas
+        });
+    }
+
+    [HttpGet("alumnos/{id:guid}/reporte-pdf")]
+    public async Task<IActionResult> GetReportePdf(Guid id)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        if (!(await GetAllowedStudentIdsAsync(userId.Value)).Contains(id))
+            return Forbid();
+
+        var record = await _studentRepositorie.GetStudentRecord(id);
+        if (record == null)
+            return NotFound();
+
+        var disabilities = await _studentSupportRepositorie.GetStudentDisabilities(id);
+        var attentionAreas = await _studentSupportRepositorie.GetStudentAttentionAreas(id);
+
+        var pdfBytes = await _studentReportPdfService.GenerateAsync(record, disabilities, attentionAreas);
+
+        return File(pdfBytes, "application/pdf", $"reporte-{id}.pdf");
+    }
+
+    private async Task<HashSet<Guid>> GetAllowedStudentIdsAsync(Guid docenteUserId)
+    {
+        var allowedGroupYearPairs = await _context.UserGroup
+            .AsNoTracking()
+            .Where(ug => ug.UserId == docenteUserId)
+            .Select(ug => new { ug.GroupId, ug.SchoolYearId })
+            .ToListAsync();
+
+        if (allowedGroupYearPairs.Count == 0)
+            return [];
+
+        var groupIds = allowedGroupYearPairs.Select(g => g.GroupId).Distinct().ToArray();
+        var yearIds = allowedGroupYearPairs.Select(g => g.SchoolYearId).Distinct().ToArray();
+
+        var studentIds = await _context.Registration
+            .AsNoTracking()
+            .Where(r => groupIds.Contains(r.GroupId) && yearIds.Contains(r.SchoolYearId))
+            .Select(r => r.StudentId)
+            .ToListAsync();
+
+        return studentIds.ToHashSet();
     }
 
     private Guid? GetCurrentUserId()

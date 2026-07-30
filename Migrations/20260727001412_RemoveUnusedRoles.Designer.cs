@@ -3,6 +3,7 @@ using System;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace SIAEV2.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260727001412_RemoveUnusedRoles")]
+    partial class RemoveUnusedRoles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -105,26 +108,26 @@ namespace SIAEV2.Migrations
                         new
                         {
                             Id = 1,
+                            CVE = "APRENDIZAJE",
+                            Name = "Aprendizaje"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CVE = "PSICOLOGIA",
+                            Name = "Psicología"
+                        },
+                        new
+                        {
+                            Id = 3,
                             CVE = "COMUNICACION",
                             Name = "Comunicación"
                         },
                         new
                         {
-                            Id = 2,
-                            CVE = "ATENCION",
-                            Name = "Atención"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CVE = "CONDUCTA",
-                            Name = "Conducta"
-                        },
-                        new
-                        {
                             Id = 4,
-                            CVE = "APRENDIZAJE",
-                            Name = "Aprendizaje"
+                            CVE = "TRABAJO_SOCIAL",
+                            Name = "Trabajo Social"
                         });
                 });
 

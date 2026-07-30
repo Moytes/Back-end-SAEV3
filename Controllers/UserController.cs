@@ -46,9 +46,6 @@ public class UserController(
         if (!ModelState.IsValid)
             return BadRequest("Invalid request");
 
-        if (request.RoleId != 2 && request.RoleId != 11)
-            return BadRequest("El administrador de plataforma solo puede crear usuarios SUPERVISOR o CREADOR_CONTENIDO.");
-
         var passwordHash = _passwordHashService.HashPassword(request.Password, out string passwordSalt);
 
         var user = await _userRepository.CreateUser(request, passwordSalt, passwordHash);

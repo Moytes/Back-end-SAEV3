@@ -78,6 +78,28 @@ public class StudentSupportRepositorie : IStudentSupportRepositorie
         return await _dbConnection.QueryAsync<StudentDisabilityItemDto>(sql, new { StudentId = studentId });
     }
 
+    public async Task<IEnumerable<StudentAttentionAreaItemDto>> GetStudentAttentionAreas(Guid studentId)
+    {
+        var sql = """
+            SELECT
+                saa.id,
+                saa.student_id AS StudentId,
+                saa.attention_area_id AS AttentionAreaId,
+                aa.cve AS AttentionAreaCVE,
+                aa.name AS AttentionAreaName,
+                saa.school_year_id AS SchoolYearId,
+                saa.is_required AS IsRequired,
+                saa.notes
+            FROM "student_attention_area" saa
+            INNER JOIN "attention_area" aa ON aa.id = saa.attention_area_id
+            INNER JOIN "school_year" sy ON sy.id = saa.school_year_id
+            WHERE saa.student_id = @StudentId
+            ORDER BY sy.start_date DESC, aa.name;
+            """;
+
+        return await _dbConnection.QueryAsync<StudentAttentionAreaItemDto>(sql, new { StudentId = studentId });
+    }
+
     public async Task<Result<int>> AddStudentDisability(Guid studentId, AddStudentDisabilityRequest request)
     {
         var studentExists = await _context.Student.AnyAsync(x => x.Id == studentId);

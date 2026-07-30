@@ -119,7 +119,7 @@ public class AdminCatalogController(
     }
 
     [HttpPost("grupos")]
-    [Authorize(Roles = "ADMIN,DIRECTOR_USAER,TRABAJO_SOCIAL")]
+    [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> CreateGroup([FromBody] AddGroupRequest request)
     {
         if (!ModelState.IsValid)

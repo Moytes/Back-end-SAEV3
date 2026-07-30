@@ -47,6 +47,7 @@ public class StudentRepositorie : IStudentRepositorie
             LEFT JOIN "grade" gr ON gr.id = g.grade_id
             LEFT JOIN "school" sc ON sc.id = g.school_id
             LEFT JOIN "school_year" sy ON sy.id = r.school_year_id
+            LEFT JOIN "school" direct_school ON direct_school.id = s.school_id
             WHERE (
                 @Search IS NULL OR
                 s.name ILIKE '%' || @Search || '%' OR
@@ -54,7 +55,7 @@ public class StudentRepositorie : IStudentRepositorie
                 s.mother_last_name ILIKE '%' || @Search || '%' OR
                 s.curp ILIKE '%' || @Search || '%'
             )
-            AND (@SchoolId IS NULL OR sc.id = @SchoolId)
+            AND (@SchoolId IS NULL OR COALESCE(sc.id, direct_school.id) = @SchoolId)
             ORDER BY s.father_last_name, s.mother_last_name, s.name;
             """;
 
@@ -346,7 +347,7 @@ public class StudentRepositorie : IStudentRepositorie
         int? schoolId,
         int? groupId,
         IEnumerable<int> allowedSchoolIds,
-        int attentionAreaId)
+        int[] attentionAreaIds)
     {
         var schoolIds = allowedSchoolIds.Distinct().ToArray();
         if (schoolIds.Length == 0)
@@ -385,7 +386,7 @@ public class StudentRepositorie : IStudentRepositorie
                 SELECT 1
                 FROM "student_attention_area" saa
                 WHERE saa.student_id = s.id
-                  AND saa.attention_area_id = @AttentionAreaId
+                  AND saa.attention_area_id = ANY(@AttentionAreaIds)
                   AND saa.school_year_id = r.school_year_id
               )
               AND (
@@ -404,7 +405,7 @@ public class StudentRepositorie : IStudentRepositorie
             SchoolId = schoolId,
             GroupId = groupId,
             AllowedSchoolIds = schoolIds,
-            AttentionAreaId = attentionAreaId
+            AttentionAreaIds = attentionAreaIds
         });
     }
 

@@ -467,15 +467,11 @@ public class AppDbContext : DbContext
     {
         modelBuilder.Entity<Role>().HasData(
             new Role { Id = 1, Clave = "ADMIN", Nombre = "Administrador del sistema" },
-            new Role { Id = 2, Clave = "SUPERVISOR", Nombre = "Supervisor de zona" },
-            new Role { Id = 3, Clave = "DIRECTOR_USAER", Nombre = "Director de USAER" },
             new Role { Id = 4, Clave = "ESPECIALISTA_COM", Nombre = "Especialista en Comunicación" },
             new Role { Id = 5, Clave = "ESPECIALISTA_PSI", Nombre = "Especialista en Psicología" },
             new Role { Id = 6, Clave = "ESPECIALISTA_APR", Nombre = "Especialista en Aprendizaje" },
-            new Role { Id = 7, Clave = "TRABAJO_SOCIAL", Nombre = "Trabajo Social" },
             new Role { Id = 8, Clave = "DOCENTE", Nombre = "Docente de grupo regular" },
-            new Role { Id = 9, Clave = "TUTOR", Nombre = "Padre / tutor" },
-            new Role { Id = 10, Clave = "ALUMNO", Nombre = "Alumno (autoservicio)" }
+            new Role { Id = 9, Clave = "TUTOR", Nombre = "Padre / tutor" }
         );
     }
 
@@ -502,10 +498,10 @@ public class AppDbContext : DbContext
     private void SeedAttentionAreas(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AttentionArea>().HasData(
-            new AttentionArea { Id = 1, CVE = "APRENDIZAJE", Name = "Aprendizaje" },
-            new AttentionArea { Id = 2, CVE = "PSICOLOGIA", Name = "Psicología" },
-            new AttentionArea { Id = 3, CVE = "COMUNICACION", Name = "Comunicación" },
-            new AttentionArea { Id = 4, CVE = "TRABAJO_SOCIAL", Name = "Trabajo Social" }
+            new AttentionArea { Id = 1, CVE = "COMUNICACION", Name = "Comunicación" },
+            new AttentionArea { Id = 2, CVE = "ATENCION", Name = "Atención" },
+            new AttentionArea { Id = 3, CVE = "CONDUCTA", Name = "Conducta" },
+            new AttentionArea { Id = 4, CVE = "APRENDIZAJE", Name = "Aprendizaje" }
         );
     }
 
