@@ -18,6 +18,13 @@ public class User
     public int RoleId { get; set; }
     public Role Role { get; set; } = null!;
 
+    /// <summary>
+    /// Especialidad del especialista (PSICOLOGIA/COMUNICACION/APRENDIZAJE) — solo determina
+    /// su pantalla de inicio y filtro sugerido por defecto. No se usa para autorización;
+    /// eso lo cubre el rol ESPECIALISTA por sí solo. Null para cualquier otro rol.
+    /// </summary>
+    public string? Especialidad { get; set; }
+
     public int? SchoolZoneId { get; set; }
     public SchoolZone? SchoolZone { get; set; }
 

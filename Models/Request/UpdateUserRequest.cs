@@ -32,4 +32,10 @@ public class UpdateUserRequest
 
     public string? AvatarUrl { get; set; }
     public bool Activo { get; set; }
+
+    /// <summary>
+    /// Solo aplica cuando RoleId es ESPECIALISTA: PSICOLOGIA/COMUNICACION/APRENDIZAJE.
+    /// Decide su pantalla de inicio por defecto, no afecta permisos.
+    /// </summary>
+    public string? Especialidad { get; set; }
 }

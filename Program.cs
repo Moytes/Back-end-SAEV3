@@ -17,6 +17,10 @@ using Utilities.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Dapper no reconoce DateOnly/TimeOnly de forma nativa; sin esto, cualquier consulta con
+// esas columnas (StudentReportPdfService, etc.) truena con "Object must implement IConvertible".
+Utilities.Data.DapperDateTypeHandlers.Register();
+
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
@@ -96,7 +100,6 @@ builder.Services.AddScoped<IUserRepositorie, UserRepositorie>();
 builder.Services.AddScoped<IAdminCatalogRepositorie, AdminCatalogRepositorie>();
 builder.Services.AddScoped<IStudentRepositorie, StudentRepositorie>();
 builder.Services.AddScoped<IStudentSupportRepositorie, StudentSupportRepositorie>();
-builder.Services.AddScoped<INotificationRepositorie, NotificationRepositorie>();
 
 // ====================================================================
 // CONFIGURACIÓN JWT

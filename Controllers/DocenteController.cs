@@ -1,12 +1,17 @@
 using System.Security.Claims;
+using System.Data;
+using Dapper;
 using Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Models.Dto;
 using Repositories.IRepositories;
 using Services.IServices;
 
 namespace Controllers;
+
+public record CreateDocenteObservacionRequest(string Texto, int? SchoolYearId = null);
 
 [ApiController]
 [Route("api/docente")]
@@ -16,12 +21,14 @@ public class DocenteController(
     AppDbContext context,
     IStudentRepositorie studentRepositorie,
     IStudentSupportRepositorie studentSupportRepositorie,
-    IStudentReportPdfService studentReportPdfService) : ControllerBase
+    IStudentReportPdfService studentReportPdfService,
+    IDbConnection dbConnection) : ControllerBase
 {
     private readonly AppDbContext _context = context;
     private readonly IStudentRepositorie _studentRepositorie = studentRepositorie;
     private readonly IStudentSupportRepositorie _studentSupportRepositorie = studentSupportRepositorie;
     private readonly IStudentReportPdfService _studentReportPdfService = studentReportPdfService;
+    private readonly IDbConnection _dbConnection = dbConnection;
 
     [HttpGet("escuelas")]
     public async Task<IActionResult> GetSchools([FromQuery] int? schoolYearId = null)
@@ -165,6 +172,47 @@ public class DocenteController(
         return Ok(students);
     }
 
+    [HttpGet("alumnos/{id:guid}/observaciones")]
+    public async Task<IActionResult> GetObservaciones(Guid id)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        if (!(await GetAllowedStudentIdsAsync(userId.Value)).Contains(id))
+            return Forbid();
+
+        var observaciones = await QueryObservacionesAsync(id);
+        return Ok(observaciones);
+    }
+
+    [HttpPost("alumnos/{id:guid}/observaciones")]
+    public async Task<IActionResult> CreateObservacion(Guid id, [FromBody] CreateDocenteObservacionRequest request)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        if (!(await GetAllowedStudentIdsAsync(userId.Value)).Contains(id))
+            return Forbid();
+
+        if (string.IsNullOrWhiteSpace(request.Texto))
+            return BadRequest(new { message = "El texto de la observación es obligatorio." });
+
+        var observacion = new Models.DB.DocenteObservacion
+        {
+            StudentId = id,
+            DocenteId = userId.Value,
+            SchoolYearId = request.SchoolYearId,
+            Texto = request.Texto.Trim(),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.DocenteObservacion.Add(observacion);
+        await _context.SaveChangesAsync();
+
+        var created = (await QueryObservacionesAsync(id).ConfigureAwait(false)).FirstOrDefault(o => o.Id == observacion.Id);
+        return Created($"/api/docente/alumnos/{id}/observaciones/{observacion.Id}", created);
+    }
+
     [HttpGet("alumnos/{id:guid}/areas-atencion")]
     public async Task<IActionResult> GetStudentAttentionAreas(Guid id)
     {
@@ -194,11 +242,42 @@ public class DocenteController(
         var disabilities = await _studentSupportRepositorie.GetStudentDisabilities(id);
         var attentionAreas = await _studentSupportRepositorie.GetStudentAttentionAreas(id);
 
+        var actividades = await _dbConnection.QueryAsync<StudentHistorialActividadDto>("""
+            SELECT
+                aa.id                   AS Id,
+                m.titulo                AS MaterialTitulo,
+                aa.estado               AS Estado,
+                a.fecha_asignacion      AS FechaAsignacion,
+                a.fecha_limite          AS FechaLimite,
+                aa.fecha_completado     AS FechaCompletado,
+                aa.retroalimentacion    AS Retroalimentacion,
+                a.instrucciones         AS Instrucciones
+            FROM asignacion_alumnos aa
+            JOIN asignaciones a ON a.id = aa.asignacion_id
+            JOIN materiales m ON m.id = a.material_id
+            WHERE aa.alumno_id = @StudentId
+            ORDER BY a.fecha_asignacion DESC;
+            """, new { StudentId = id });
+
+        var observaciones = await QueryObservacionesAsync(id);
+
+        var evaluacionesResumen = await _dbConnection.QueryAsync<EvaluacionResumenDto>("""
+            SELECT 'Evaluación psicopedagógica' AS Tipo, fecha_elaboracion AS Fecha, estado AS Estado
+            FROM evaluaciones_psicopedagogicas WHERE alumno_id = @StudentId
+            UNION ALL
+            SELECT 'Tamizaje TEA' AS Tipo, fecha AS Fecha, nivel_alerta AS Estado
+            FROM tea_screenings WHERE alumno_id = @StudentId
+            ORDER BY Fecha DESC;
+            """, new { StudentId = id });
+
         return Ok(new
         {
             student = record,
             disabilities,
-            attentionAreas
+            attentionAreas,
+            actividades,
+            observaciones,
+            evaluacionesResumen
         });
     }
 
@@ -245,6 +324,23 @@ public class DocenteController(
 
         return studentIds.ToHashSet();
     }
+
+    private Task<IEnumerable<DocenteObservacionDto>> QueryObservacionesAsync(Guid studentId) =>
+        _dbConnection.QueryAsync<DocenteObservacionDto>("""
+            SELECT
+                o.id              AS Id,
+                o.student_id      AS StudentId,
+                o.docente_id      AS DocenteId,
+                TRIM(CONCAT(u.name, ' ', u.father_last_name,
+                    COALESCE(' ' || NULLIF(u.mother_last_name, ''), ''))) AS DocenteNombre,
+                o.school_year_id  AS SchoolYearId,
+                o.texto           AS Texto,
+                o.created_at      AS CreatedAt
+            FROM docente_observaciones o
+            JOIN "user" u ON u.id = o.docente_id
+            WHERE o.student_id = @StudentId
+            ORDER BY o.created_at DESC;
+            """, new { StudentId = studentId });
 
     private Guid? GetCurrentUserId()
     {

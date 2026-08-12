@@ -13,7 +13,9 @@ namespace Repositories;
 
 public class UserRepositorie : IUserRepositorie
 {
-    private static readonly int[] SupervisorManagedRoleIds = [3, 4, 5, 6, 7, 8, 11];
+    // 3 (DIRECTOR_USAER) y 7 (TRABAJO_SOCIAL) ya no existen (RemoveUnusedRoles); 4 y 6
+    // (ESPECIALISTA_COM/APR) se fusionaron en 5 (MergeEspecialistaRoles).
+    private static readonly int[] SupervisorManagedRoleIds = [5, 8, 11];
 
     private readonly AppDbContext _context;
     private readonly IDbConnection _dbConnection;
@@ -57,6 +59,7 @@ public class UserRepositorie : IUserRepositorie
             AcademySubscriptionId = request.AcademySubscriptionId,
             Phone = request.Phone,
             AvatarUrl = request.AvatarUrl,
+            Especialidad = request.Especialidad,
             PasswordHash = passwordHash,
             PasswordSalt = passwordSalt,
             Activo = true,
@@ -103,6 +106,7 @@ public class UserRepositorie : IUserRepositorie
                 u.activo,
                 u.created_at AS CreatedAt,
                 u.updated_at AS UpdatedAt,
+                u.especialidad AS Especialidad,
                 COALESCE(s.name, 'Acceso Global') AS SchoolName
             FROM "user" u
             INNER JOIN "role" r ON r.id = u.role_id
@@ -159,6 +163,21 @@ public class UserRepositorie : IUserRepositorie
         user.Phone = request.Phone;
         user.AvatarUrl = request.AvatarUrl;
         user.Activo = request.Activo;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Result<bool>.Success(true);
+    }
+
+    public async Task<Result<bool>> UpdatePassword(Guid userId, string passwordHash, string passwordSalt)
+    {
+        var user = await _context.User.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null)
+            return Result<bool>.Failure(UserErrors.UserNotFound);
+
+        user.PasswordHash = passwordHash;
+        user.PasswordSalt = passwordSalt;
         user.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -458,7 +477,8 @@ public class UserRepositorie : IUserRepositorie
             MotherLastName = request.MotherLastName,
             RoleId = request.RoleId,
             Phone = request.Phone,
-            AvatarUrl = request.AvatarUrl
+            AvatarUrl = request.AvatarUrl,
+            Especialidad = request.Especialidad
         };
 
         var result = await CreateUser(userRequest, passwordSalt, passwordHash);
@@ -506,6 +526,7 @@ public class UserRepositorie : IUserRepositorie
         user.RoleId = request.RoleId;
         user.Phone = request.Phone;
         user.AvatarUrl = request.AvatarUrl;
+        user.Especialidad = request.Especialidad;
         user.Activo = request.Activo;
         user.UpdatedAt = DateTime.UtcNow;
 

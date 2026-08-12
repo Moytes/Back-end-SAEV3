@@ -36,4 +36,7 @@ public class SupervisorCreateStaffRequest
     public string? Phone { get; set; }
 
     public string? AvatarUrl { get; set; }
+
+    /// <summary>Solo aplica cuando RoleId es ESPECIALISTA: PSICOLOGIA/COMUNICACION/APRENDIZAJE.</summary>
+    public string? Especialidad { get; set; }
 }

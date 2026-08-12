@@ -8,7 +8,9 @@ namespace Controllers;
 [ApiController]
 [Route("api/comunicacion")]
 [Produces("application/json")]
-[Authorize(Roles = "ESPECIALISTA_COM")]
+// Cualquier especialista puede entrar aquí — la especialidad ya no es un rol distinto,
+// es solo un dato de perfil (user.Especialidad) que decide a dónde aterriza por defecto.
+[Authorize(Roles = "ESPECIALISTA")]
 public class ComunicacionController(
     IUserRepositorie userRepository,
     IStudentRepositorie studentRepository,

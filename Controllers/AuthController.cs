@@ -122,11 +122,83 @@ public class AuthController(
             user.Phone,
             user.Activo,
             user.AvatarUrl,
+            user.Especialidad,
             user.CreatedAt,
             user.UpdatedAt,
             schoolIds,
             schoolZoneId = user.SchoolZoneId
         });
+    }
+
+    /// <summary>
+    /// Autoedición de perfil — solo los campos que le pertenecen al propio usuario
+    /// (nombre, apellidos, teléfono, avatar). Rol/zona/estado activo no se pueden
+    /// tocar desde aquí; eso sigue siendo exclusivo de PUT /api/usuarios/{id} (ADMIN).
+    /// </summary>
+    [HttpPut("me")]
+    [Authorize]
+    public async Task<IActionResult> UpdateMe([FromBody] UpdateMyProfileRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
+            return Unauthorized();
+
+        var user = await _userRepositorie.GetUserById(userId);
+        if (user == null)
+            return Unauthorized("User not found");
+
+        var updateRequest = new UpdateUserRequest
+        {
+            Email = user.Email,
+            Name = request.Name,
+            FatherLastName = request.FatherLastName,
+            MotherLastName = request.MotherLastName,
+            RoleId = user.RoleId,
+            SchoolZoneId = user.SchoolZoneId,
+            AcademySubscriptionId = user.AcademySubscriptionId,
+            Phone = request.Phone,
+            AvatarUrl = request.AvatarUrl,
+            Activo = user.Activo
+        };
+
+        var result = await _userRepositorie.UpdateUser(userId, updateRequest);
+        if (!result.IsSuccess)
+            return BadRequest(result.error.Message);
+
+        return await GetMe();
+    }
+
+    /// <summary>
+    /// Cambio de contraseña propia — requiere conocer la contraseña actual, a diferencia
+    /// del alta de usuario (ADMIN) que asigna una directamente.
+    /// </summary>
+    [HttpPost("me/password")]
+    [Authorize]
+    public async Task<IActionResult> ChangeMyPassword([FromBody] ChangePasswordRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
+            return Unauthorized();
+
+        var user = await _userRepositorie.GetUserById(userId);
+        if (user == null)
+            return Unauthorized("User not found");
+
+        if (!_passwordHashService.VerifyPassword(request.CurrentPassword, user.PasswordHash, user.PasswordSalt))
+            return BadRequest("La contraseña actual no es correcta.");
+
+        var newHash = _passwordHashService.HashPassword(request.NewPassword, out var newSalt);
+        var result = await _userRepositorie.UpdatePassword(userId, newHash, newSalt);
+        if (!result.IsSuccess)
+            return BadRequest(result.error.Message);
+
+        return Ok("Contraseña actualizada correctamente.");
     }
 
     [HttpGet("HealthCheck")]

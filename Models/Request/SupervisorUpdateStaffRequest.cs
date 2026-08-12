@@ -32,4 +32,7 @@ public class SupervisorUpdateStaffRequest
 
     public string? AvatarUrl { get; set; }
     public bool Activo { get; set; } = true;
+
+    /// <summary>Solo aplica cuando RoleId es ESPECIALISTA: PSICOLOGIA/COMUNICACION/APRENDIZAJE.</summary>
+    public string? Especialidad { get; set; }
 }
