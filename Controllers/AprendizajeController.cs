@@ -8,7 +8,8 @@ namespace Controllers;
 [ApiController]
 [Route("api/aprendizaje")]
 [Produces("application/json")]
-[Authorize(Roles = "ESPECIALISTA_APR")]
+// Cualquier especialista puede entrar aquí — ver comentario en ComunicacionController.
+[Authorize(Roles = "ESPECIALISTA")]
 public class AprendizajeController(
     IUserRepositorie userRepository,
     IStudentRepositorie studentRepository,

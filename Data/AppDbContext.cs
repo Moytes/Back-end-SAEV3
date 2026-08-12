@@ -46,6 +46,8 @@ public class AppDbContext : DbContext
     // Notificaciones
     public DbSet<Notification> Notification { get; set; }
 
+    public DbSet<DocenteObservacion> DocenteObservacion { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -110,6 +112,31 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<AttentionMode>()
             .HasIndex(am => new { am.StudentId, am.SchoolYearId, am.Phase, am.Type }).IsUnique();
+
+        modelBuilder.Entity<DocenteObservacion>(e =>
+        {
+            e.ToTable("docente_observaciones");
+            e.Property(o => o.Id).HasColumnName("id");
+            e.Property(o => o.StudentId).HasColumnName("student_id");
+            e.Property(o => o.DocenteId).HasColumnName("docente_id");
+            e.Property(o => o.SchoolYearId).HasColumnName("school_year_id");
+            e.Property(o => o.Texto).HasColumnName("texto");
+            e.Property(o => o.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+            e.HasIndex(o => new { o.StudentId, o.CreatedAt })
+                .HasDatabaseName("ix_docente_observaciones_student_id_created_at");
+            e.HasOne(o => o.Student)
+                .WithMany()
+                .HasForeignKey(o => o.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(o => o.Docente)
+                .WithMany()
+                .HasForeignKey(o => o.DocenteId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(o => o.SchoolYear)
+                .WithMany()
+                .HasForeignKey(o => o.SchoolYearId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
 
         // ====================================================================
         // COLUMN CONFIGURATIONS
@@ -465,11 +492,13 @@ public class AppDbContext : DbContext
 
     private void SeedRoles(ModelBuilder modelBuilder)
     {
+        // Los 3 roles de especialista (COM/PSI/APR) se unificaron en uno solo (migración
+        // MergeEspecialistaRoles): ninguna restricción real de permisos dependía de cuál de
+        // los 3 fuera — la especialidad ahora es un atributo de perfil (user.Especialidad),
+        // no un rol distinto.
         modelBuilder.Entity<Role>().HasData(
             new Role { Id = 1, Clave = "ADMIN", Nombre = "Administrador del sistema" },
-            new Role { Id = 4, Clave = "ESPECIALISTA_COM", Nombre = "Especialista en Comunicación" },
-            new Role { Id = 5, Clave = "ESPECIALISTA_PSI", Nombre = "Especialista en Psicología" },
-            new Role { Id = 6, Clave = "ESPECIALISTA_APR", Nombre = "Especialista en Aprendizaje" },
+            new Role { Id = 5, Clave = "ESPECIALISTA", Nombre = "Especialista" },
             new Role { Id = 8, Clave = "DOCENTE", Nombre = "Docente de grupo regular" },
             new Role { Id = 9, Clave = "TUTOR", Nombre = "Padre / tutor" }
         );

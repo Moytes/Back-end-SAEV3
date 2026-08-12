@@ -110,7 +110,7 @@ public class StudentController(
     }
 
     [HttpPost("inscripciones")]
-    [Authorize(Roles = "ADMIN,ESPECIALISTA_COM,ESPECIALISTA_PSI,ESPECIALISTA_APR")]
+    [Authorize(Roles = "ADMIN,ESPECIALISTA")]
     public async Task<IActionResult> AddRegistration([FromBody] AddRegistrationRequest request)
     {
         if (!ModelState.IsValid)

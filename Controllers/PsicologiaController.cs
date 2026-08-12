@@ -8,7 +8,8 @@ namespace Controllers;
 [ApiController]
 [Route("api/psicologia")]
 [Produces("application/json")]
-[Authorize(Roles = "ESPECIALISTA_PSI")]
+// Cualquier especialista puede entrar aquí — ver comentario en ComunicacionController.
+[Authorize(Roles = "ESPECIALISTA")]
 public class PsicologiaController(
     IUserRepositorie userRepository,
     IStudentRepositorie studentRepository,

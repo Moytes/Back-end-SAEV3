@@ -13,6 +13,7 @@ public interface IUserRepositorie
 
     Task<IEnumerable<UserListItemDto>> GetUsers(int? roleId, int? schoolZoneId, int? schoolId);
     Task<Result<bool>> UpdateUser(Guid userId, UpdateUserRequest request);
+    Task<Result<bool>> UpdatePassword(Guid userId, string passwordHash, string passwordSalt);
     Task<bool> UserExists(Guid userId);
     Task<bool> EmailExists(string email, Guid? excludeUserId = null);
     Task<Result<int>> AssignUserToGroup(Guid userId, AssignUserGroupRequest request);
