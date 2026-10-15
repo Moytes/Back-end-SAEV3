@@ -80,8 +80,10 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            policy.AllowAnyMethod()
-                .AllowAnyHeader();
+            policy.SetIsOriginAllowed(_ => true)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
         }
     });
 });
