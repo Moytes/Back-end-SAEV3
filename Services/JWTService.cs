@@ -12,8 +12,8 @@ public class JWTService(IConfiguration configuration) : IJWTService
 
     public async Task<string> GenerateToken(Guid userId, string roleClave, IEnumerable<Claim>? additionalClaims = null)
     {
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]!));
+        var secretKey = _configuration["Jwt:SecretKey"] ?? "SuperSecretKeyForSIAEBackendAuthentication2026!#";
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -27,12 +27,16 @@ public class JWTService(IConfiguration configuration) : IJWTService
         if (additionalClaims != null)
             claims.AddRange(additionalClaims);
 
+        var issuer = _configuration["Jwt:Issuer"] ?? "SIAE-Backend";
+        var audience = _configuration["Jwt:Audience"] ?? "SIAE-Frontend";
+        var expMinutesStr = _configuration["Jwt:ExpirationInMinutes"];
+        var expMinutes = double.TryParse(expMinutesStr, out var m) ? m : 1440;
+
         var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
+            issuer: issuer,
+            audience: audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(
-                double.Parse(_configuration["Jwt:ExpirationInMinutes"]!)),
+            expires: DateTime.UtcNow.AddMinutes(expMinutes),
             signingCredentials: credentials);
 
         return await Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));

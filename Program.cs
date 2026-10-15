@@ -30,7 +30,11 @@ builder.Logging.AddDebug();
 // ====================================================================
 
 var connectionString = builder.Configuration.GetConnectionString("SupabaseConnection")
-    ?? throw new InvalidOperationException("Connection string 'SupabaseConnection' not found.");
+    ?? builder.Configuration["SupabaseConnection"]
+    ?? builder.Configuration["ConnectionStrings__SupabaseConnection"]
+    ?? builder.Configuration["POSTGRESQLCONNSTR_SupabaseConnection"]
+    ?? builder.Configuration["CUSTOMCONNSTR_SupabaseConnection"]
+    ?? "Host=db.npcyaeinnmbnxmrkysui.supabase.co;Port=5432;Database=postgres;Username=postgres;Password='Moises12#$\"!$';SSL Mode=Require;Trust Server Certificate=true";
 connectionString = BuildPostgresConnectionString(connectionString);
 
 var keysPath = Path.Combine(builder.Environment.ContentRootPath, ".keys");
@@ -55,36 +59,17 @@ builder.Services.AddScoped<IDbConnection>(sp =>
     new NpgsqlConnection(connectionString));
 
 // ====================================================================
-// CONFIGURACIÓN DE CORS
+// CONFIGURACIÓN DE CORS (Acceso total a cualquier origen y petición)
 // ====================================================================
-
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? [];
-allowedOrigins = allowedOrigins
-    .Where(origin => !string.IsNullOrWhiteSpace(origin))
-    .ToArray();
-
-if (allowedOrigins.Length == 0 && builder.Environment.IsDevelopment())
-    allowedOrigins = ["http://localhost:4200"];
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularDev", policy =>
     {
-        if (allowedOrigins.Length > 0)
-        {
-            policy.WithOrigins(allowedOrigins)
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials();
-        }
-        else
-        {
-            policy.SetIsOriginAllowed(_ => true)
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials();
-        }
+        policy.SetIsOriginAllowed(_ => true)
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 
@@ -110,16 +95,19 @@ builder.Services.AddScoped<IStudentSupportRepositorie, StudentSupportRepositorie
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "SIAE-Backend";
+        var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "SIAE-Frontend";
+        var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] ?? "SuperSecretKeyForSIAEBackendAuthentication2026!#";
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!))
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey))
         };
 
         options.Events = new JwtBearerEvents
@@ -154,6 +142,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
+app.UseCors("AllowAngularDev");
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 // ====================================================================
@@ -194,8 +183,6 @@ else
 {
     app.UseHttpsRedirection();
 }
-
-app.UseCors("AllowAngularDev");
 
 app.UseAuthentication();
 app.UseAuthorization();
