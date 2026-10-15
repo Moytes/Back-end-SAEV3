@@ -30,11 +30,14 @@ builder.Logging.AddDebug();
 // ====================================================================
 
 var connectionString = builder.Configuration.GetConnectionString("SupabaseConnection")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
     ?? builder.Configuration["SupabaseConnection"]
+    ?? builder.Configuration["DefaultConnection"]
     ?? builder.Configuration["ConnectionStrings__SupabaseConnection"]
+    ?? builder.Configuration["ConnectionStrings__DefaultConnection"]
     ?? builder.Configuration["POSTGRESQLCONNSTR_SupabaseConnection"]
     ?? builder.Configuration["CUSTOMCONNSTR_SupabaseConnection"]
-    ?? "Host=db.npcyaeinnmbnxmrkysui.supabase.co;Port=5432;Database=postgres;Username=postgres;Password='Moises12#$\"!$';SSL Mode=Require;Trust Server Certificate=true";
+    ?? "Host=aws-1-us-west-2.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.npcyaeinnmbnxmrkysui;Password='Moises12#$\"!$';SSL Mode=Require;Trust Server Certificate=true";
 connectionString = BuildPostgresConnectionString(connectionString);
 
 var keysPath = Path.Combine(builder.Environment.ContentRootPath, ".keys");
