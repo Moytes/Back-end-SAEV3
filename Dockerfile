@@ -11,7 +11,7 @@ RUN dotnet restore "SIAE-V2.csproj"
 # Copiar el resto del código fuente
 COPY . .
 
-# Compilar la aplicación en modo Release
+# Compilar 
 RUN dotnet build "SIAE-V2.csproj" -c Release -o /app/build
 
 # ====================================================================
