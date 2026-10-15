@@ -8,7 +8,7 @@ WORKDIR /src
 COPY ["SIAE-V2.csproj", "./"]
 RUN dotnet restore "SIAE-V2.csproj"
 
-# Copiar el resto del código fuente
+
 COPY . .
 
 # Compilar 
