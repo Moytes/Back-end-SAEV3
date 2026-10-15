@@ -208,15 +208,14 @@ app.MapGet("/health/database", async (AppDbContext dbContext) =>
 {
     try
     {
-        var canConnect = await dbContext.Database.CanConnectAsync();
-        return canConnect
-            ? Results.Ok(new { status = "ok", database = "connected" })
-            : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+        await dbContext.Database.OpenConnectionAsync();
+        await dbContext.Database.CloseConnectionAsync();
+        return Results.Ok(new { status = "ok", database = "connected" });
     }
-    catch (Exception ex) when (ex is NpgsqlException or TimeoutException or InvalidOperationException)
+    catch (Exception ex)
     {
         return Results.Json(
-            new { status = "unavailable", database = "disconnected", message = ex.GetBaseException().Message },
+            new { status = "unavailable", database = "disconnected", error = ex.GetBaseException().Message },
             statusCode: StatusCodes.Status503ServiceUnavailable);
     }
 });

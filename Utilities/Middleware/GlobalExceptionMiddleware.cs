@@ -43,7 +43,7 @@ public class GlobalExceptionMiddleware
             context.Response.StatusCode,
             $"ID_{context.Response.StatusCode}",
             isDatabaseUnavailable
-                ? "No se pudo conectar con la base de datos. Verifica la conexion a internet, DNS y la cadena SupabaseConnection."
+                ? $"No se pudo conectar con la base de datos: {exception.GetBaseException().Message}"
                 : exception.Message
         );
 
