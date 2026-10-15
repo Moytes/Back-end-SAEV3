@@ -3,7 +3,7 @@
 # ====================================================================
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-#hola
+
 # Copiar archivo del proyecto y restaurar dependencias
 COPY ["SIAE-V2.csproj", "./"]
 RUN dotnet restore "SIAE-V2.csproj"
